@@ -163,6 +163,6 @@ unsafePeekStyle = StackMachine (\styles -> case styles of
 writeOutput :: output -> StackMachine output style ()
 writeOutput w = StackMachine (\styles -> ((), w, styles))
 
--- | Run the renderer and retrive the writing end
+-- | Run the renderer and retrieve the writing end
 execStackMachine :: [styles] -> StackMachine output styles a -> (output, [styles])
 execStackMachine styles (StackMachine r) = let (_, w, s) = r styles in (w, s)

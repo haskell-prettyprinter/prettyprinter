@@ -6,7 +6,7 @@ the new `prettyprinter` one. Its purpose is making packages that only generate
 `ansi-wl-pprint` data available to the `prettyprinter` ecosystem.
 
 Note the difference to the `prettyprinter-compat-ansi-wl-pprint` module, which
-does *not* convert any data, and instead provides an API that mimicks
+does *not* convert any data, and instead provides an API that mimics
 `ansi-wl-pprint`, while secretly being `prettyprinter`-based behind the
 curtains. This package on the other hand does a proper conversion.
 
