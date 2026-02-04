@@ -858,7 +858,7 @@ indent i d = hang i (spaces i <> d)
 -- list [1,20,300,4000]
 --
 -- If there is not enough space, then the input is split into lines entry-wise
--- therwise they are laid out vertically, with separators put in the front:
+-- otherwise they are laid out vertically, with separators put in the front:
 --
 -- >>> putDocW 10 doc
 -- list [1
@@ -1364,7 +1364,7 @@ annotate = Annotated
 -- @
 --
 -- it should not be used without caution, for each invocation traverses the
--- entire contained document. If possible, it is preferrable to unannotate after
+-- entire contained document. If possible, it is preferable to unannotate after
 -- producing the layout by using 'unAnnotateS'.
 unAnnotate :: Doc ann -> Doc xxx
 unAnnotate = alterAnnotations (const [])
@@ -1375,7 +1375,7 @@ unAnnotate = alterAnnotations (const [])
 -- generally annotated document.
 --
 -- Since this traverses the entire @'Doc'@ tree, including parts that are not
--- rendered due to other layouts fitting better, it is preferrable to reannotate
+-- rendered due to other layouts fitting better, it is preferable to reannotate
 -- after producing the layout by using @'reAnnotateS'@.
 --
 -- Since @'reAnnotate'@ has the right type and satisfies @'reAnnotate id = id'@,
@@ -1396,7 +1396,7 @@ reAnnotate re = alterAnnotations (pure . re)
 -- not vice-versa.
 --
 -- Since this traverses the entire @'Doc'@ tree, including parts that are not
--- rendered due to other layouts fitting better, it is preferrable to reannotate
+-- rendered due to other layouts fitting better, it is preferable to reannotate
 -- after producing the layout by using @'alterAnnotationsS'@.
 alterAnnotations :: (ann -> [ann']) -> Doc ann -> Doc ann'
 alterAnnotations re = go
@@ -1871,7 +1871,7 @@ layoutPretty (LayoutOptions Unbounded) = layoutUnbounded
 -- |------------------------|
 --
 -- Note that this exceeds the desired 26 character page width. The same
--- document, rendered with @'layoutSmart'@, fits the layout contstraints:
+-- document, rendered with @'layoutSmart'@, fits the layout constraints:
 --
 -- >>> go layoutSmart doc
 -- |------------------------|
@@ -1986,7 +1986,7 @@ layoutWadlerLeijen
   where
 
     -- * current column >= current nesting level
-    -- * current column - current indentaion = number of chars inserted in line
+    -- * current column - current indentation = number of chars inserted in line
     best
         :: Int -- Current nesting level
         -> Int -- Current column, i.e. "where the cursor is"

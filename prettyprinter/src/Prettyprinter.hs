@@ -180,7 +180,7 @@
 --
 -- /Modularity:/ To change the color of keywords later, you have to touch one
 -- point, namely the mapping in @'reAnnotateS'@, where @'Keyword'@ is mapped to
--- 'Red'. If you have @'annotate Red …'@ everywher, you’ll have to do a full
+-- 'Red'. If you have @'annotate Red …'@ everywhere, you’ll have to do a full
 -- text replacement, producing a large diff and touching lots of places for a
 -- very small change.
 --
@@ -224,7 +224,7 @@ module Prettyprinter (
     -- * List functions
 
     -- | The 'sep' and 'cat' functions differ in one detail: when 'group'ed, the
-    -- 'sep's replace newlines wich 'space's, while the 'cat's simply remove
+    -- 'sep's replace newlines which 'space's, while the 'cat's simply remove
     -- them. If you're not sure what you want, start with the 'sep's.
 
     concatWith,
