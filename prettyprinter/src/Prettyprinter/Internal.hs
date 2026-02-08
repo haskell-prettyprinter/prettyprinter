@@ -397,36 +397,33 @@ instance (Pretty a1, Pretty a2) => Pretty (a1,a2) where
 instance (Pretty a1, Pretty a2, Pretty a3) => Pretty (a1,a2,a3) where
     pretty (x1,x2,x3) = tupled [pretty x1, pretty x2, pretty x3]
 
---    -- | >>> pretty (123, "hello", False, ())
---    -- (123, hello, False, ())
---    instance (Pretty a1, Pretty a2, Pretty a3, Pretty a4) => Pretty (a1,a2,a3,a4) where
---        pretty (x1,x2,x3,x4) = tupled [pretty x1, pretty x2, pretty x3, pretty x4]
+-- | >>> pretty (123, "hello", False, ())
+-- (123, hello, False, ())
 --
---    -- | >>> pretty (123, "hello", False, (), 3.14)
---    -- (123, hello, False, (), 3.14)
---    instance (Pretty a1, Pretty a2, Pretty a3, Pretty a4, Pretty a5) => Pretty (a1,a2,a3,a4,a5) where
---        pretty (x1,x2,x3,x4,x5) = tupled [pretty x1, pretty x2, pretty x3, pretty x4, pretty x5]
+-- @since FIXME
+instance (Pretty a1, Pretty a2, Pretty a3, Pretty a4) => Pretty (a1,a2,a3,a4) where
+    pretty (x1,x2,x3,x4) = tupled [pretty x1, pretty x2, pretty x3, pretty x4]
+
+-- | >>> pretty (123, "hello", False, (), 3.14)
+-- (123, hello, False, (), 3.14)
 --
---    -- | >>> pretty (123, "hello", False, (), 3.14, Just 2.71)
---    -- ( 123
---    -- , hello
---    -- , False
---    -- , ()
---    -- , 3.14
---    -- , 2.71 )
---    instance (Pretty a1, Pretty a2, Pretty a3, Pretty a4, Pretty a5, Pretty a6) => Pretty (a1,a2,a3,a4,a5,a6) where
---        pretty (x1,x2,x3,x4,x5,x6) = tupled [pretty x1, pretty x2, pretty x3, pretty x4, pretty x5, pretty x6]
+-- @since FIXME
+instance (Pretty a1, Pretty a2, Pretty a3, Pretty a4, Pretty a5) => Pretty (a1,a2,a3,a4,a5) where
+    pretty (x1,x2,x3,x4,x5) = tupled [pretty x1, pretty x2, pretty x3, pretty x4, pretty x5]
+
+-- | >>> pretty (123, "hello", False, (), 3.14, Just 2.71)
+-- (123, hello, False, (), 3.14, 2.71)
 --
---    -- | >>> pretty (123, "hello", False, (), 3.14, Just 2.71, [1,2,3])
---    -- ( 123
---    -- , hello
---    -- , False
---    -- , ()
---    -- , 3.14
---    -- , 2.71
---    -- , [1, 2, 3] )
---    instance (Pretty a1, Pretty a2, Pretty a3, Pretty a4, Pretty a5, Pretty a6, Pretty a7) => Pretty (a1,a2,a3,a4,a5,a6,a7) where
---        pretty (x1,x2,x3,x4,x5,x6,x7) = tupled [pretty x1, pretty x2, pretty x3, pretty x4, pretty x5, pretty x6, pretty x7]
+-- @since FIXME
+instance (Pretty a1, Pretty a2, Pretty a3, Pretty a4, Pretty a5, Pretty a6) => Pretty (a1,a2,a3,a4,a5,a6) where
+    pretty (x1,x2,x3,x4,x5,x6) = tupled [pretty x1, pretty x2, pretty x3, pretty x4, pretty x5, pretty x6]
+
+-- | >>> pretty (123, "hello", False, (), 3.14, Just 2.71, [1,2,3])
+-- (123, hello, False, (), 3.14, 2.71, [1, 2, 3])
+--
+-- @since FIXME
+instance (Pretty a1, Pretty a2, Pretty a3, Pretty a4, Pretty a5, Pretty a6, Pretty a7) => Pretty (a1,a2,a3,a4,a5,a6,a7) where
+    pretty (x1,x2,x3,x4,x5,x6,x7) = tupled [pretty x1, pretty x2, pretty x3, pretty x4, pretty x5, pretty x6, pretty x7]
 
 -- | Ignore 'Nothing's, print 'Just' contents.
 --
@@ -1810,8 +1807,8 @@ defaultLayoutOptions = LayoutOptions { layoutPageWidth = defaultPageWidth }
 -- | This is the default layout algorithm, and it is used by 'show', 'putDoc'
 -- and 'hPutDoc'.
 --
--- @'layoutPretty'@ commits to rendering something in a certain way if the 
--- remainder of the current line fits the layout constraints; in other words, 
+-- @'layoutPretty'@ commits to rendering something in a certain way if the
+-- remainder of the current line fits the layout constraints; in other words,
 -- it has up to one line of lookahead when rendering. Consider using the
 -- smarter, but a bit less performant, @'layoutSmart'@ algorithm if the results
 -- seem to run off to the right before having lots of line breaks.
