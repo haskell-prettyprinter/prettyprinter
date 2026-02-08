@@ -399,24 +399,28 @@ instance (Pretty a1, Pretty a2, Pretty a3) => Pretty (a1,a2,a3) where
 
 -- | >>> pretty (123, "hello", False, ())
 -- (123, hello, False, ())
+--
 -- @since FIXME
 instance (Pretty a1, Pretty a2, Pretty a3, Pretty a4) => Pretty (a1,a2,a3,a4) where
     pretty (x1,x2,x3,x4) = tupled [pretty x1, pretty x2, pretty x3, pretty x4]
 
 -- | >>> pretty (123, "hello", False, (), 3.14)
 -- (123, hello, False, (), 3.14)
+--
 -- @since FIXME
 instance (Pretty a1, Pretty a2, Pretty a3, Pretty a4, Pretty a5) => Pretty (a1,a2,a3,a4,a5) where
     pretty (x1,x2,x3,x4,x5) = tupled [pretty x1, pretty x2, pretty x3, pretty x4, pretty x5]
 
 -- | >>> pretty (123, "hello", False, (), 3.14, Just 2.71)
 -- (123, hello, False, (), 3.14, 2.71)
+--
 -- @since FIXME
 instance (Pretty a1, Pretty a2, Pretty a3, Pretty a4, Pretty a5, Pretty a6) => Pretty (a1,a2,a3,a4,a5,a6) where
     pretty (x1,x2,x3,x4,x5,x6) = tupled [pretty x1, pretty x2, pretty x3, pretty x4, pretty x5, pretty x6]
 
 -- | >>> pretty (123, "hello", False, (), 3.14, Just 2.71, [1,2,3])
 -- (123, hello, False, (), 3.14, 2.71, [1,2,3])
+--
 -- @since FIXME
 instance (Pretty a1, Pretty a2, Pretty a3, Pretty a4, Pretty a5, Pretty a6, Pretty a7) => Pretty (a1,a2,a3,a4,a5,a6,a7) where
     pretty (x1,x2,x3,x4,x5,x6,x7) = tupled [pretty x1, pretty x2, pretty x3, pretty x4, pretty x5, pretty x6, pretty x7]
