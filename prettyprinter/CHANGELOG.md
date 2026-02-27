@@ -1,3 +1,7 @@
+# Unreleased
+
+- Drop support for GHC 7.
+
 # [1.7.1]
 
 - [Deprecate the `Data.Text.Prettyprint.*` modules](https://github.com/quchen/prettyprinter/pull/203)

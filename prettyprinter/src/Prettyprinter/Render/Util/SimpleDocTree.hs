@@ -1,5 +1,4 @@
 {-# LANGUAGE CPP                #-}
-{-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE DeriveGeneric      #-}
 
 #include "version-compatibility-macros.h"
@@ -27,7 +26,6 @@ module Prettyprinter.Render.Util.SimpleDocTree (
 import           Control.Applicative
 import           Data.Text           (Text)
 import qualified Data.Text           as T
-import           Data.Typeable       (Typeable)
 import           GHC.Generics
 
 import Prettyprinter
@@ -104,7 +102,6 @@ renderSimplyDecoratedA text renderAnn = go
 --
 -- Hand-written to avoid a dependency on a parser lib.
 newtype UniqueParser s a = UniqueParser { runParser :: s -> Maybe (a, s) }
-  deriving Typeable
 
 instance Functor (UniqueParser s) where
     fmap f (UniqueParser mx) = UniqueParser (\s ->
@@ -144,7 +141,7 @@ data SimpleDocTok ann
     | TokLine Int
     | TokAnnPush ann
     | TokAnnPop
-    deriving (Eq, Ord, Show, Typeable)
+    deriving (Eq, Ord, Show)
 
 -- | A 'SimpleDocStream' is a linked list of different annotated cons cells
 -- ('SText' and then some further 'SimpleDocStream', 'SLine' and then some
@@ -168,7 +165,7 @@ data SimpleDocTree ann
 
     -- | Horizontal concatenation of multiple documents.
     | STConcat [SimpleDocTree ann]
-    deriving (Eq, Ord, Show, Generic, Typeable)
+    deriving (Eq, Ord, Show, Generic)
 
 -- | Alter the document’s annotations.
 --

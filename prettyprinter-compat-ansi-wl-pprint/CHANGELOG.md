@@ -1,3 +1,7 @@
+# Unreleased
+
+- Drop support for GHC 7.
+
 # [1.1]
 
 - [Change `renderPretty` to use `layoutPretty` instead of `layoutSmart`.](https://github.com/quchen/prettyprinter/pull/244)

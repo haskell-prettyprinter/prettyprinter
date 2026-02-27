@@ -67,7 +67,7 @@ library
         , ScopedTypeVariables
 
     build-depends:
-          base >= 4.5 && < 5
+          base >= 4.9 && < 5
 
     if flag(text)
         build-depends: text >= 1.2
@@ -112,7 +112,7 @@ executable generate_readme
     hs-source-dirs: app
     main-is: GenerateReadme.hs
     build-depends:
-          base >= 4.7 && < 5
+          base >= 4.9 && < 5
         , prettyprinter
 
         , text
@@ -134,7 +134,7 @@ test-suite doctest
     hs-source-dirs: test/Doctest
     main-is: Main.hs
     build-depends:
-          base       >= 4.7 && < 5
+          base       >= 4.9 && < 5
         , doctest    >= 0.9
         , prettyprinter
         , QuickCheck >= 2.5
@@ -175,7 +175,7 @@ benchmark fusion
     hs-source-dirs: bench
     main-is: Fusion.hs
     build-depends:
-          base >= 4.5 && < 5
+          base >= 4.9 && < 5
         , prettyprinter
 
         , tasty-bench    >= 0.2
@@ -192,7 +192,7 @@ benchmark fusion
 
 benchmark faster-unsafe-text
     build-depends:
-          base >= 4.5 && < 5
+          base >= 4.9 && < 5
         , prettyprinter
 
         , tasty-bench >= 0.2
@@ -209,8 +209,8 @@ benchmark faster-unsafe-text
 
 benchmark large-output
     build-depends:
-          base >= 4.5 && < 5
-        , base-compat >=0.9.3 && <0.12
+          base >= 4.9 && < 5
+        , base-compat >=0.9.3 && <0.15
         , prettyprinter
         , ansi-wl-pprint
 

@@ -1,7 +1,6 @@
 {-# LANGUAGE BangPatterns          #-}
 {-# LANGUAGE CPP                   #-}
 {-# LANGUAGE DefaultSignatures     #-}
-{-# LANGUAGE DeriveDataTypeable    #-}
 {-# LANGUAGE DeriveGeneric         #-}
 {-# LANGUAGE FlexibleInstances     #-}
 {-# LANGUAGE GADTs                 #-}
@@ -94,7 +93,6 @@ import           Data.String         (IsString (..))
 import           Data.Text           (Text)
 import qualified Data.Text           as T
 import qualified Data.Text.Lazy      as Lazy
-import           Data.Typeable       (Typeable)
 import           Data.Void
 import           Data.Word
 import           GHC.Generics        (Generic)
@@ -195,7 +193,7 @@ data Doc ann =
     -- | Add an annotation to the enclosed 'Doc'. Can be used for example to add
     -- styling directives or alt texts that can then be used by the renderer.
     | Annotated ann (Doc ann)
-    deriving (Generic, Typeable)
+    deriving Generic
 
 -- |
 -- @
@@ -1530,7 +1528,6 @@ reAnnotateS re = go
         SAnnPush ann rest -> SAnnPush (re ann) (go rest)
 
 data AnnotationRemoval = Remove | DontRemove
-  deriving Typeable
 
 -- | Change the annotation of a document to a different annotation, or none at
 -- all. 'alterAnnotations' for 'SimpleDocStream'.
@@ -1575,7 +1572,7 @@ data FusionDepth =
     -- This value should only be used if profiling shows it is significantly
     -- faster than using 'Shallow'.
     | Deep
-    deriving (Eq, Ord, Show, Typeable)
+    deriving (Eq, Ord, Show)
 
 -- | @('fuse' depth doc)@ combines text nodes so they can be rendered more
 -- efficiently. A fused document is always laid out identical to its unfused
@@ -1676,7 +1673,7 @@ data SimpleDocStream ann =
 
     -- | Remove a previously pushed annotation.
     | SAnnPop (SimpleDocStream ann)
-    deriving (Eq, Ord, Show, Generic, Typeable)
+    deriving (Eq, Ord, Show, Generic)
 
 -- | Remove all trailing space characters.
 --
@@ -1762,7 +1759,6 @@ data WhitespaceStrippingState
     = AnnotationLevel !Int
     | RecordedWhitespace [Int] !Int
       -- ^ [Newline with indentation i] Spaces
-  deriving Typeable
 
 
 
@@ -1826,14 +1822,12 @@ newtype FittingPredicate ann
                    -> Maybe Int
                    -> SimpleDocStream ann
                    -> Bool)
-  deriving Typeable
 
 -- | List of nesting level/document pairs yet to be laid out.
 data LayoutPipeline ann =
       Nil
     | Cons !Int (Doc ann) (LayoutPipeline ann)
     | UndoAnn (LayoutPipeline ann)
-  deriving Typeable
 
 -- | Maximum number of characters that fit in one line. The layout algorithms
 -- will try not to exceed the set limit by inserting line breaks when applicable
@@ -1854,7 +1848,7 @@ data PageWidth
     | Unbounded
     -- ^ Layouters should not introduce line breaks on their own.
 
-    deriving (Eq, Ord, Show, Typeable)
+    deriving (Eq, Ord, Show)
 
 defaultPageWidth :: PageWidth
 defaultPageWidth = AvailablePerLine 80 1
@@ -1876,7 +1870,7 @@ remainingWidth lineLength ribbonFraction lineIndent currentColumn =
 
 -- | Options to influence the layout algorithms.
 newtype LayoutOptions = LayoutOptions { layoutPageWidth :: PageWidth }
-    deriving (Eq, Ord, Show, Typeable)
+    deriving (Eq, Ord, Show)
 
 -- | The default layout options, suitable when you just want some output, and
 -- don’t particularly care about the details. Used by the 'Show' instance, for
