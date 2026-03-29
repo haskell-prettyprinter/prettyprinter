@@ -533,6 +533,18 @@ instance (PrettyAnn ann a1, PrettyAnn ann a2) => PrettyAnn ann (a1,a2) where
 instance (PrettyAnn ann a1, PrettyAnn ann a2, PrettyAnn ann a3) => PrettyAnn ann (a1,a2,a3) where
     prettyAnn (x1,x2,x3) = tupled [prettyAnn x1, prettyAnn x2, prettyAnn x3]
 
+instance (PrettyAnn ann a1, PrettyAnn ann a2, PrettyAnn ann a3, PrettyAnn ann a4) => PrettyAnn ann (a1,a2,a3,a4) where
+    prettyAnn (x1,x2,x3,x4) = tupled [prettyAnn x1, prettyAnn x2, prettyAnn x3, prettyAnn x4]
+
+instance (PrettyAnn ann a1, PrettyAnn ann a2, PrettyAnn ann a3, PrettyAnn ann a4, PrettyAnn ann a5) => PrettyAnn ann (a1,a2,a3,a4,a5) where
+    prettyAnn (x1,x2,x3,x4,x5) = tupled [prettyAnn x1, prettyAnn x2, prettyAnn x3, prettyAnn x4, prettyAnn x5]
+
+instance (PrettyAnn ann a1, PrettyAnn ann a2, PrettyAnn ann a3, PrettyAnn ann a4, PrettyAnn ann a5, PrettyAnn ann a6) => PrettyAnn ann (a1,a2,a3,a4,a5,a6) where
+    prettyAnn (x1,x2,x3,x4,x5,x6) = tupled [prettyAnn x1, prettyAnn x2, prettyAnn x3, prettyAnn x4, prettyAnn x5, prettyAnn x6]
+
+instance (PrettyAnn ann a1, PrettyAnn ann a2, PrettyAnn ann a3, PrettyAnn ann a4, PrettyAnn ann a5, PrettyAnn ann a6, PrettyAnn ann a7) => PrettyAnn ann (a1,a2,a3,a4,a5,a6,a7) where
+    prettyAnn (x1,x2,x3,x4,x5,x6,x7) = tupled [prettyAnn x1, prettyAnn x2, prettyAnn x3, prettyAnn x4, prettyAnn x5, prettyAnn x6, prettyAnn x7]
+
 instance PrettyAnn ann a => PrettyAnn ann (Maybe a) where
     prettyAnn = maybe mempty prettyAnn
     prettyAnnList = prettyAnnList . catMaybes
