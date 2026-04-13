@@ -1,6 +1,12 @@
-# Unreleased
+# [1.1.4] – April 2026
 
-- Drop support for GHC 7.
+- [Add `text` flag](https://github.com/quchen/prettyprinter/pull/279)
+- [Fix inconsistency between `renderLazy`/`renderIO`](https://github.com/quchen/prettyprinter/pull/261)
+- [Drop support for GHC 7](https://github.com/quchen/prettyprinter/pull/278)
+- [Remove compatibility code for GHC < 8](https://github.com/quchen/prettyprinter/pull/285)
+- [Make it compile with MicroHs](https://github.com/quchen/prettyprinter/pull/270)
+
+[1.1.4]: https://github.com/quchen/prettyprinter/compare/ansi-terminal-v1.1.3...ansi-terminal-v1.1.4
 
 # [1.1.3]
 

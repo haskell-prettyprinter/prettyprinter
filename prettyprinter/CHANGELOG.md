@@ -1,6 +1,18 @@
-# Unreleased
+# [1.7.2] – April 2026
 
-- Drop support for GHC 7.
+- [Add `PrettyAnn` type class](https://github.com/quchen/prettyprinter/pull/256)
+- [Remove the MINIMAL pragma from `Pretty`](https://github.com/quchen/prettyprinter/pull/219)
+- [Add instance `ann ~ Void => Pretty (Doc ann)`](https://github.com/quchen/prettyprinter/pull/234)
+- [Add `Pretty` instances for 4-7 tuples](https://github.com/quchen/prettyprinter/pull/275)
+- [Make it compile with MicroHs](https://github.com/quchen/prettyprinter/pull/270)
+- [Drop support for GHC 7](https://github.com/quchen/prettyprinter/pull/278)
+- [Remove compatibility code for GHC < 8](https://github.com/quchen/prettyprinter/pull/285)
+- Documentation improvements:
+  * [#229](https://github.com/quchen/prettyprinter/pull/229)
+  * [#255](https://github.com/quchen/prettyprinter/pull/255)
+  * [#273](https://github.com/quchen/prettyprinter/pull/273)
+
+[1.7.2]: https://github.com/quchen/prettyprinter/compare/v1.7.1...v1.7.2
 
 # [1.7.1]
 

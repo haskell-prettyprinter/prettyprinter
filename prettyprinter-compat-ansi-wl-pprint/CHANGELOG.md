@@ -1,6 +1,10 @@
-# Unreleased
+# [1.1.1] – April 2026
 
-- Drop support for GHC 7.
+- [Drop support for GHC 7](https://github.com/quchen/prettyprinter/pull/278)
+- [Remove compatibility code for GHC < 8](https://github.com/quchen/prettyprinter/pull/285)
+- [Make it compile with MicroHs](https://github.com/quchen/prettyprinter/pull/270)
+
+[1.1.1]: https://github.com/quchen/prettyprinter/compare/compat-ansi-wl-pprint-1.1...compat-ansi-wl-pprint-1.1.1
 
 # [1.1]
 

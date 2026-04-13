@@ -290,6 +290,7 @@ class Pretty a where
 --   , (1, [2, 2, 2, 2, 2, 2, 2, 2])
 --   , (1, [2, 2, 2, 2, 2, 2, 2, 2]) ] ]
 
+-- | @since 1.7.2
 instance ann ~ Void => Pretty (Doc ann) where
   pretty = vacuous
 
@@ -345,7 +346,7 @@ instance Pretty Char where
 -- | This class is similar to 'Pretty', but allows you to embed annotations in
 -- the 'Doc'.
 --
--- @since FIXME
+-- @since 1.7.2
 class PrettyAnn ann a where
 
     prettyAnn :: a -> Doc ann
@@ -356,25 +357,33 @@ class PrettyAnn ann a where
     prettyAnnList :: [a] -> Doc ann
     prettyAnnList = align . list . map prettyAnn
 
+-- | @since 1.7.2
 instance PrettyAnn ann (Doc ann) where
     prettyAnn = id
 
+-- | @since 1.7.2
 instance PrettyAnn ann a => PrettyAnn ann (Const a b) where
     prettyAnn = prettyAnn . getConst
 
+-- | @since 1.7.2
 instance PrettyAnn ann a => PrettyAnn ann (Identity a) where
     prettyAnn = prettyAnn . runIdentity
 
+-- | @since 1.7.2
 instance PrettyAnn ann a => PrettyAnn ann [a] where
     prettyAnn = prettyAnnList
 
+-- | @since 1.7.2
 instance PrettyAnn ann a => PrettyAnn ann (NonEmpty a) where
     prettyAnn (x:|xs) = prettyAnnList (x:xs)
 
+-- | @since 1.7.2
 instance PrettyAnn ann () where prettyAnn = pretty
 
+-- | @since 1.7.2
 instance PrettyAnn ann Bool where prettyAnn = pretty
 
+-- | @since 1.7.2
 instance PrettyAnn ann Char where
     prettyAnn = pretty
     prettyAnnList = prettyList
@@ -430,28 +439,28 @@ instance (Pretty a1, Pretty a2, Pretty a3) => Pretty (a1,a2,a3) where
 -- | >>> pretty (123, "hello", False, ())
 -- (123, hello, False, ())
 --
--- @since FIXME
+-- @since 1.7.2
 instance (Pretty a1, Pretty a2, Pretty a3, Pretty a4) => Pretty (a1,a2,a3,a4) where
     pretty (x1,x2,x3,x4) = tupled [pretty x1, pretty x2, pretty x3, pretty x4]
 
 -- | >>> pretty (123, "hello", False, (), 3.14)
 -- (123, hello, False, (), 3.14)
 --
--- @since FIXME
+-- @since 1.7.2
 instance (Pretty a1, Pretty a2, Pretty a3, Pretty a4, Pretty a5) => Pretty (a1,a2,a3,a4,a5) where
     pretty (x1,x2,x3,x4,x5) = tupled [pretty x1, pretty x2, pretty x3, pretty x4, pretty x5]
 
 -- | >>> pretty (123, "hello", False, (), 3.14, Just 2.71)
 -- (123, hello, False, (), 3.14, 2.71)
 --
--- @since FIXME
+-- @since 1.7.2
 instance (Pretty a1, Pretty a2, Pretty a3, Pretty a4, Pretty a5, Pretty a6) => Pretty (a1,a2,a3,a4,a5,a6) where
     pretty (x1,x2,x3,x4,x5,x6) = tupled [pretty x1, pretty x2, pretty x3, pretty x4, pretty x5, pretty x6]
 
 -- | >>> pretty (123, "hello", False, (), 3.14, Just 2.71, [1,2,3])
 -- (123, hello, False, (), 3.14, 2.71, [1, 2, 3])
 --
--- @since FIXME
+-- @since 1.7.2
 instance (Pretty a1, Pretty a2, Pretty a3, Pretty a4, Pretty a5, Pretty a6, Pretty a7) => Pretty (a1,a2,a3,a4,a5,a6,a7) where
     pretty (x1,x2,x3,x4,x5,x6,x7) = tupled [pretty x1, pretty x2, pretty x3, pretty x4, pretty x5, pretty x6, pretty x7]
 
@@ -496,53 +505,77 @@ instance Pretty Lazy.Text
 -- []
 instance Pretty Void where pretty = absurd
 
+-- | @since 1.7.2
 instance PrettyAnn ann Int    where prettyAnn = pretty
+-- | @since 1.7.2
 instance PrettyAnn ann Int8   where prettyAnn = pretty
+-- | @since 1.7.2
 instance PrettyAnn ann Int16  where prettyAnn = pretty
+-- | @since 1.7.2
 instance PrettyAnn ann Int32  where prettyAnn = pretty
+-- | @since 1.7.2
 instance PrettyAnn ann Int64  where prettyAnn = pretty
+-- | @since 1.7.2
 instance PrettyAnn ann Word   where prettyAnn = pretty
+-- | @since 1.7.2
 instance PrettyAnn ann Word8  where prettyAnn = pretty
+-- | @since 1.7.2
 instance PrettyAnn ann Word16 where prettyAnn = pretty
+-- | @since 1.7.2
 instance PrettyAnn ann Word32 where prettyAnn = pretty
+-- | @since 1.7.2
 instance PrettyAnn ann Word64 where prettyAnn = pretty
 
+-- | @since 1.7.2
 instance PrettyAnn ann Integer where prettyAnn = pretty
 
+-- | @since 1.7.2
 instance PrettyAnn ann Natural where prettyAnn = pretty
 
+-- | @since 1.7.2
 instance PrettyAnn ann Float where prettyAnn = pretty
 
+-- | @since 1.7.2
 instance PrettyAnn ann Double where prettyAnn = pretty
 
+-- | @since 1.7.2
 instance (PrettyAnn ann a1, PrettyAnn ann a2) => PrettyAnn ann (a1,a2) where
     prettyAnn (x1,x2) = tupled [prettyAnn x1, prettyAnn x2]
 
+-- | @since 1.7.2
 instance (PrettyAnn ann a1, PrettyAnn ann a2, PrettyAnn ann a3) => PrettyAnn ann (a1,a2,a3) where
     prettyAnn (x1,x2,x3) = tupled [prettyAnn x1, prettyAnn x2, prettyAnn x3]
 
+-- | @since 1.7.2
 instance (PrettyAnn ann a1, PrettyAnn ann a2, PrettyAnn ann a3, PrettyAnn ann a4) => PrettyAnn ann (a1,a2,a3,a4) where
     prettyAnn (x1,x2,x3,x4) = tupled [prettyAnn x1, prettyAnn x2, prettyAnn x3, prettyAnn x4]
 
+-- | @since 1.7.2
 instance (PrettyAnn ann a1, PrettyAnn ann a2, PrettyAnn ann a3, PrettyAnn ann a4, PrettyAnn ann a5) => PrettyAnn ann (a1,a2,a3,a4,a5) where
     prettyAnn (x1,x2,x3,x4,x5) = tupled [prettyAnn x1, prettyAnn x2, prettyAnn x3, prettyAnn x4, prettyAnn x5]
 
+-- | @since 1.7.2
 instance (PrettyAnn ann a1, PrettyAnn ann a2, PrettyAnn ann a3, PrettyAnn ann a4, PrettyAnn ann a5, PrettyAnn ann a6) => PrettyAnn ann (a1,a2,a3,a4,a5,a6) where
     prettyAnn (x1,x2,x3,x4,x5,x6) = tupled [prettyAnn x1, prettyAnn x2, prettyAnn x3, prettyAnn x4, prettyAnn x5, prettyAnn x6]
 
+-- | @since 1.7.2
 instance (PrettyAnn ann a1, PrettyAnn ann a2, PrettyAnn ann a3, PrettyAnn ann a4, PrettyAnn ann a5, PrettyAnn ann a6, PrettyAnn ann a7) => PrettyAnn ann (a1,a2,a3,a4,a5,a6,a7) where
     prettyAnn (x1,x2,x3,x4,x5,x6,x7) = tupled [prettyAnn x1, prettyAnn x2, prettyAnn x3, prettyAnn x4, prettyAnn x5, prettyAnn x6, prettyAnn x7]
 
+-- | @since 1.7.2
 instance PrettyAnn ann a => PrettyAnn ann (Maybe a) where
     prettyAnn = maybe mempty prettyAnn
     prettyAnnList = prettyAnnList . catMaybes
 
 #ifdef MIN_VERSION_text
+-- | @since 1.7.2
 instance PrettyAnn ann Text where prettyAnn = pretty
 
+-- | @since 1.7.2
 instance PrettyAnn ann Lazy.Text where prettyAnn = pretty
 #endif
 
+-- | @since 1.7.2
 instance PrettyAnn ann Void where prettyAnn = absurd
 
 
