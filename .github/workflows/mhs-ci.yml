@@ -12,7 +12,7 @@ jobs:
     steps:
 
     - name: checkout mhs repo
-      uses: actions/checkout@v4
+      uses: actions/checkout@v6
       with:
         repository: augustss/MicroHs
         ref: v0.15.4.0
@@ -25,7 +25,7 @@ jobs:
 
     # prettyprinter
     - name: checkout prettyprinter repo
-      uses: actions/checkout@v4
+      uses: actions/checkout@v6
       with:
         path: prettyprinter
 
