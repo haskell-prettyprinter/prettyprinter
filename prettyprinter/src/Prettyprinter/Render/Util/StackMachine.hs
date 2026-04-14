@@ -31,7 +31,6 @@ module Prettyprinter.Render.Util.StackMachine (
 
 
 
-import           Control.Applicative
 import           Data.Text           (Text)
 import qualified Data.Text           as T
 
@@ -40,6 +39,10 @@ import Prettyprinter.Render.Util.Panic
 
 #if !(SEMIGROUP_MONOID_SUPERCLASS)
 import Data.Monoid
+#endif
+
+#if !(LIFTA2_IN_PRELUDE)
+import Control.Applicative (liftA2)
 #endif
 
 
@@ -129,9 +132,6 @@ instance Monoid output => Applicative (StackMachine output style) where
         in (f1 x2, w12, s2))
 
 instance Monoid output => Monad (StackMachine output style) where
-#if !(APPLICATIVE_MONAD)
-    return = pure
-#endif
     StackMachine r >>= f = StackMachine (\s ->
         let (x1, w1, s1) = r s
             StackMachine r1 = f x1

@@ -53,15 +53,7 @@ import Prettyprinter
 import Prettyprinter.Render.Util.Panic
 
 #if !(SEMIGROUP_MONOID_SUPERCLASS)
-import Data.Semigroup
-#endif
-
-#if !(MIN_VERSION_base(4,6,0))
-modifyIORef' :: IORef a -> (a -> a) -> IO ()
-modifyIORef' ref f = do
-    x <- readIORef ref
-    let x' = f x
-    x' `seq` writeIORef ref x'
+import Data.Semigroup (Semigroup(..))
 #endif
 
 -- $setup

@@ -101,9 +101,7 @@ import           GHC.Generics        (Generic)
 -- from the semigroups package.
 import Data.Semigroup
 
-#if NATURAL_IN_BASE
 import Numeric.Natural
-#endif
 
 #if !(FOLDABLE_TRAVERSABLE_IN_PRELUDE)
 import Data.Foldable    (Foldable (..))
@@ -111,9 +109,7 @@ import Data.Traversable (Traversable (..))
 import Prelude          hiding (null, foldr, foldr1)
 #endif
 
-#if FUNCTOR_IDENTITY_IN_BASE
 import Data.Functor.Identity
-#endif
 
 import Prettyprinter.Render.Util.Panic
 
@@ -300,12 +296,10 @@ instance ann ~ Void => Pretty (Doc ann) where
 instance Pretty a => Pretty (Const a b) where
   pretty = pretty . getConst
 
-#if FUNCTOR_IDENTITY_IN_BASE
 -- | >>> pretty (Identity 1)
 -- 1
 instance Pretty a => Pretty (Identity a) where
   pretty = pretty . runIdentity
-#endif
 
 -- | >>> pretty [1,2,3]
 -- [1, 2, 3]
@@ -368,10 +362,8 @@ instance PrettyAnn ann (Doc ann) where
 instance PrettyAnn ann a => PrettyAnn ann (Const a b) where
     prettyAnn = prettyAnn . getConst
 
-#if FUNCTOR_IDENTITY_IN_BASE
 instance PrettyAnn ann a => PrettyAnn ann (Identity a) where
     prettyAnn = prettyAnn . runIdentity
-#endif
 
 instance PrettyAnn ann a => PrettyAnn ann [a] where
     prettyAnn = prettyAnnList
@@ -415,9 +407,7 @@ instance Pretty Word64 where pretty = unsafeViaShow
 -- 10633823966279326983230456482242756608
 instance Pretty Integer where pretty = unsafeViaShow
 
-#if NATURAL_IN_BASE
 instance Pretty Natural where pretty = unsafeViaShow
-#endif
 
 -- | >>> pretty (pi :: Float)
 -- 3.1415927
@@ -519,9 +509,7 @@ instance PrettyAnn ann Word64 where prettyAnn = pretty
 
 instance PrettyAnn ann Integer where prettyAnn = pretty
 
-#if NATURAL_IN_BASE
 instance PrettyAnn ann Natural where prettyAnn = pretty
-#endif
 
 instance PrettyAnn ann Float where prettyAnn = pretty
 

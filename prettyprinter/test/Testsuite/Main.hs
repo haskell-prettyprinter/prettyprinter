@@ -27,13 +27,6 @@ import Test.Tasty.QuickCheck
 
 import StripTrailingSpace
 
-#if !(APPLICATIVE_MONAD)
-import Control.Applicative
-#endif
-#if !(MONOID_IN_PRELUDE)
-import Data.Monoid (mconcat)
-#endif
-
 
 
 main :: IO ()

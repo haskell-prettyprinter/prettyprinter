@@ -33,6 +33,3 @@ library
         , text                        >= 1.2
         , prettyprinter               >= 1.7.0
         , prettyprinter-ansi-terminal >= 1.1
-
-    if !impl(ghc >= 8.0) && !impl(mhs)
-        build-depends: semigroups >= 0.1

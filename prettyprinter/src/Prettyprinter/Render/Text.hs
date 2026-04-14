@@ -28,14 +28,6 @@ import Prettyprinter
 import Prettyprinter.Internal
 import Prettyprinter.Render.Util.Panic
 
-#if !(SEMIGROUP_IN_BASE)
-import Data.Semigroup
-#endif
-
-#if !(APPLICATIVE_MONAD)
-import Control.Applicative
-#endif
-
 -- $setup
 --
 -- (Definitions for the doctests)

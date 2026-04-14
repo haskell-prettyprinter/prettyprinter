@@ -18,10 +18,6 @@ import           Prettyprinter
 import           Prettyprinter.Render.Text
 import qualified Text.PrettyPrint.ANSI.Leijen as WL
 
-#if !(APPLICATIVE_MONAD)
-import Control.Applicative
-#endif
-
 
 
 main :: IO ()
@@ -47,6 +43,8 @@ benchOptimize = env randomShortWords benchmark_
     randomShortWords' :: Int -> State StdGen [Text]
     randomShortWords' n = replicateM n randomShortWord
 
+    -- Note: 'split' is deprecated in random >= 1.2 in favor of 'splitGen'.
+    -- We could use 'splitGen' when support for GHC < 9.0 is dropped.
     randomShortWord :: State StdGen Text
     randomShortWord = do
         g <- get

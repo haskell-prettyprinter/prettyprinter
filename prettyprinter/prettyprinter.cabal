@@ -55,7 +55,7 @@ library
         , Data.Text.Prettyprint.Doc.Symbols.Unicode
         , Data.Text.Prettyprint.Doc.Symbols.Ascii
 
-    ghc-options: -Wall -O2
+    ghc-options: -Wall -O2 -Wcompat
     hs-source-dirs: src
     include-dirs: misc
     default-language: Haskell2010
@@ -79,17 +79,6 @@ library
             , Data.Text.IO
             , Data.Text.Lazy
             , Data.Text.Lazy.Builder
-
-    if !impl(ghc >= 7.6) && !impl(mhs)
-        build-depends: ghc-prim
-
-    if impl(ghc >= 8.0)
-        ghc-options: -Wcompat
-    if !impl(ghc >= 8.0) && !impl(mhs)
-        build-depends: semigroups >= 0.17
-        build-depends: fail >= 4.9.0.0 && <4.10
-    if !impl(ghc >= 7.10) && !impl(mhs)
-        build-depends: void >=0.4 && <0.8
 
 
 Flag buildReadme
@@ -139,9 +128,6 @@ test-suite doctest
         , QuickCheck >= 2.5
     ghc-options: -Wall -threaded -rtsopts -with-rtsopts=-N
     default-language: Haskell2010
-    if impl (ghc < 7.10)
-        buildable: False
-        -- Doctest does not support searching through directories in old versions
 
 test-suite testsuite
     type: exitcode-stdio-1.0
@@ -161,9 +147,6 @@ test-suite testsuite
         , text
     ghc-options: -threaded -rtsopts -with-rtsopts=-N -Wall
     default-language: Haskell2010
-
-    if !impl(ghc >= 8.0)
-        build-depends: semigroups >= 0.6
 
     if !flag(text)
         buildable: False

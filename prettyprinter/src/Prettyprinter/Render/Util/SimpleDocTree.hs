@@ -34,10 +34,6 @@ import Prettyprinter.Render.Util.Panic
 
 import qualified Control.Monad.Fail as Fail
 
-#if !(MONOID_IN_PRELUDE)
-import Data.Monoid (Monoid (..))
-#endif
-
 #if !(FOLDABLE_TRAVERSABLE_IN_PRELUDE)
 import Data.Foldable    (Foldable (..))
 import Data.Traversable (Traversable (..))
@@ -120,9 +116,6 @@ instance Monad (UniqueParser s) where
         let UniqueParser p' = f a'
         p' s' )
 
-#if !(APPLICATIVE_MONAD)
-    return = pure
-#endif
 #if FAIL_IN_MONAD
     fail = Fail.fail
 #endif

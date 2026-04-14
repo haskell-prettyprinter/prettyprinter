@@ -28,10 +28,6 @@ import Prettyprinter.Internal
 import Prettyprinter.Render.Util.Panic
 import Prettyprinter.Render.Util.StackMachine
 
-#if !(APPLICATIVE_MONAD)
-import Control.Applicative
-#endif
-
 -- * The type of available markup
 --
 -- $standalone-text

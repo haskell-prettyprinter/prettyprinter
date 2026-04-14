@@ -17,17 +17,12 @@ module Text.PrettyPrint.Annotated.Leijen {-# DEPRECATED "Compatibility module fo
 
 ) where
 
-#if MIN_VERSION_base(4,8,0)
 import Prelude hiding ((<$>))
-#else
-import Prelude
+
+#if !(LIFTA2_IN_PRELUDE)
+import Control.Applicative (liftA2)
 #endif
 
-#if !(MONOID_IN_PRELUDE)
-import Data.Monoid hiding ((<>))
-#endif
-
-import           Control.Applicative hiding (empty, (<$>))
 import qualified Data.Text           as T
 import qualified Data.Text.IO        as T
 import           System.IO

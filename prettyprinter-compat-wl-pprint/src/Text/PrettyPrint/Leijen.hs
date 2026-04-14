@@ -16,11 +16,7 @@ module Text.PrettyPrint.Leijen {-# DEPRECATED "Compatibility module for users of
 
 
 
-#if MIN_VERSION_base(4,8,0)
 import Prelude hiding ((<$>))
-#else
-import Prelude
-#endif
 
 import qualified Data.Text.Lazy as TL
 import           System.IO

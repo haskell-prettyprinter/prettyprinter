@@ -16,10 +16,6 @@ import Prettyprinter.Render.Util.StackMachine
 import Test.Tasty
 import Test.Tasty.HUnit
 
-#if !(APPLICATIVE_MONAD)
-import Control.Applicative
-#endif
-
 
 
 box :: Text -> Text

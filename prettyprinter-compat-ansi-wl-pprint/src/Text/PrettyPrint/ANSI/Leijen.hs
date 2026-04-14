@@ -19,11 +19,7 @@ module Text.PrettyPrint.ANSI.Leijen {-# DEPRECATED "Compatibility module for use
 
 ) where
 
-#if MIN_VERSION_base(4,8,0)
 import Prelude hiding ((<$>))
-#else
-import Prelude
-#endif
 
 import qualified Data.Text.Lazy as TL
 import           System.IO
