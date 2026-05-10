@@ -88,6 +88,7 @@ module Prettyprinter.Internal (
 import           Control.Applicative
 import           Data.Int
 import           Data.List.NonEmpty  (NonEmpty (..))
+import qualified Data.List           as List
 import           Data.Maybe
 import           Data.String         (IsString (..))
 import           Data.Text           (Text)
@@ -1547,33 +1548,26 @@ reAnnotateS re = go
         SAnnPop rest      -> SAnnPop (go rest)
         SAnnPush ann rest -> SAnnPush (re ann) (go rest)
 
-data AnnotationRemoval = Remove | DontRemove
-
--- | Change the annotation of a document to a different annotation, or none at
--- all. 'alterAnnotations' for 'SimpleDocStream'.
---
--- Note that the 'Doc' version is more flexible, since it allows changing a
--- single annotation to multiple ones.
--- ('Prettyprinter.Render.Util.SimpleDocTree.SimpleDocTree' restores
--- this flexibility again.)
-alterAnnotationsS :: (ann -> Maybe ann') -> SimpleDocStream ann -> SimpleDocStream ann'
+-- | Change the annotations of a 'SimpleDocStream'. Individual annotations can be
+-- removed, changed, or replaced by multiple ones.
+-- 'alterAnnotations' for 'SimpleDocStream'.
+alterAnnotationsS :: (ann -> [ann']) -> SimpleDocStream ann -> SimpleDocStream ann'
 alterAnnotationsS re = go []
   where
-    -- We keep a stack of whether to remove a pop so that we can remove exactly
-    -- the pops corresponding to annotations that mapped to Nothing.
+    -- We keep a stack of how many pushes to pop corresponding to the last push.
     go stack = \sds -> case sds of
         SFail             -> SFail
         SEmpty            -> SEmpty
         SChar c rest      -> SChar c (go stack rest)
         SText l t rest    -> SText l t (go stack rest)
         SLine l rest      -> SLine l (go stack rest)
-        SAnnPush ann rest -> case re ann of
-            Nothing   -> go (Remove:stack) rest
-            Just ann' -> SAnnPush ann' (go (DontRemove:stack) rest)
+        SAnnPush ann rest -> let ann' = re ann
+                                 n = List.length ann'
+                                 rest' = go (n : stack) rest
+                             in foldr SAnnPush rest' ann'
         SAnnPop rest      -> case stack of
-            []                -> panicPeekedEmpty
-            DontRemove:stack' -> SAnnPop (go stack' rest)
-            Remove:stack'     -> go stack' rest
+            []       -> panicPeekedEmpty
+            n:stack' -> foldr ($) (go stack' rest) (replicate n SAnnPop)
 
 -- | Fusion depth parameter, used by 'fuse'.
 data FusionDepth =
