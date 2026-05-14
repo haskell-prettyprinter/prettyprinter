@@ -30,9 +30,7 @@ flag text
   manual:      True
 
 library
-    exposed-modules:  Data.Text.Prettyprint.Doc.Render.Terminal
-                    , Data.Text.Prettyprint.Doc.Render.Terminal.Internal
-                    , Prettyprinter.Render.Terminal
+    exposed-modules:  Prettyprinter.Render.Terminal
                     , Prettyprinter.Render.Terminal.Internal
     ghc-options:      -Wall -O2 -Wcompat
     hs-source-dirs:   src
