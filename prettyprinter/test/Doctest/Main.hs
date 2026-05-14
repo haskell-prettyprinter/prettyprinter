@@ -1,10 +1,7 @@
 module Main (main) where
 
-import Test.DocTest
-
--- Silence -Wunused-packages:
-import Prettyprinter   ()
-import Test.QuickCheck ()
+import Test.DocTest (mainFromCabal)
+import System.Environment (getArgs)
 
 main :: IO ()
-main = doctest [ "src" , "-Imisc"]
+main = mainFromCabal "prettyprinter" =<< getArgs

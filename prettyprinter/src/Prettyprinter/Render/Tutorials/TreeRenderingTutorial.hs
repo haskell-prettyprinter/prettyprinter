@@ -25,6 +25,13 @@ import Prettyprinter.Render.Util.SimpleDocTree
 #if !(FOLDABLE_TRAVERSABLE_IN_PRELUDE)
 import Data.Foldable (foldMap)
 #endif
+
+-- $setup
+--
+-- (Definitions for the doctests)
+--
+-- >>> :set -XOverloadedStrings
+-- >>> import Prettyprinter
 #if !(SEMIGROUP_MONOID_SUPERCLASS)
 import Data.Semigroup
 #endif

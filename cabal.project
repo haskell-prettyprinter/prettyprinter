@@ -8,3 +8,4 @@ packages: prettyprinter
         , prettyprinter-compat-annotated-wl-pprint
 tests: true
 benchmarks: true
+write-ghc-environment-files: always

@@ -150,5 +150,6 @@ pipe = Char '|'
 --
 -- >>> :set -XOverloadedStrings
 -- >>> import Data.Semigroup
+-- >>> import Prettyprinter
 -- >>> import Prettyprinter.Render.Text
 -- >>> import Prettyprinter.Util

@@ -1,6 +1,7 @@
 module Main (main) where
 
-import Test.DocTest
+import Test.DocTest (mainFromCabal)
+import System.Environment (getArgs)
 
 main :: IO ()
-main = doctest [ "src" , "-Imisc"]
+main = mainFromCabal "prettyprinter-ansi-terminal" =<< getArgs

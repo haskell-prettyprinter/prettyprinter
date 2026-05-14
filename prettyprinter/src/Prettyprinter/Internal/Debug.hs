@@ -28,6 +28,13 @@ import Data.Text (Text)
 import Prettyprinter.Internal (PageWidth, Doc)
 import qualified Prettyprinter.Internal as Doc
 
+-- $setup
+--
+-- (Definitions for the doctests)
+--
+-- >>> :set -XOverloadedStrings
+-- >>> import qualified Prettyprinter.Internal as Doc
+
 -- | A variant of 'Doc' for debugging.
 --
 -- Unlike in the 'Doc' type, the 'Column', 'WithPageWidth' and 'Nesting'

@@ -33,6 +33,7 @@ import Prettyprinter.Render.Util.Panic
 -- (Definitions for the doctests)
 --
 -- >>> :set -XOverloadedStrings
+-- >>> import Prettyprinter
 -- >>> import qualified Data.Text.IO as T
 -- >>> import qualified Data.Text.Lazy.IO as TL
 

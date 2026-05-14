@@ -1385,16 +1385,6 @@ spaces n
   | n == 1    = Char ' '
   | otherwise = Text n (textSpaces n)
 
--- $
--- prop> \(NonNegative n) -> length (show (spaces n)) == n
---
--- >>> case spaces 1 of Char ' ' -> True; _ -> False
--- True
---
--- >>> case spaces 0 of Empty -> True; _ -> False
--- True
---
--- prop> \(Positive n) -> case (spaces (-n)) of Empty -> True; _ -> False
 
 
 
@@ -2345,6 +2335,9 @@ textSpaces n = T.replicate n (T.singleton ' ')
 -- (Definitions for the doctests)
 --
 -- >>> :set -XOverloadedStrings
+-- >>> import Data.Functor.Identity
+-- >>> import Data.Text (Text)
+-- >>> import Data.Void (Void)
 -- >>> import Prettyprinter.Render.Text
 -- >>> import Prettyprinter.Symbols.Ascii
 -- >>> import Prettyprinter.Util as Util

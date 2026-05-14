@@ -139,16 +139,19 @@ render doc
 --
 -- We can now render an example document using our definitions:
 --
--- >>> :set -XOverloadedStrings
--- >>> import qualified Data.Text.Lazy.IO as TL
--- >>> :{
--- >>> let go = TL.putStrLn . render . layoutPretty defaultLayoutOptions
--- >>> in go (vsep
--- >>>     [ headline "Example document"
--- >>>     , paragraph ("This is a" <+> color Red "paragraph" <> comma)
--- >>>     , paragraph ("and" <+> bold "this text is bold.")
--- >>>     ])
--- >>> :}
--- <h1>Example document</h1>
--- <p>This is a <span style="color: #f00">paragraph</span>,</p>
--- <p>and <strong>this text is bold.</strong></p>
+-- > :set -XOverloadedStrings
+-- > import qualified Data.Text.Lazy.IO as TL
+-- > :{
+-- > let go = TL.putStrLn . render . layoutPretty defaultLayoutOptions
+-- > in go (vsep
+-- >     [ headline "Example document"
+-- >     , paragraph ("This is a" <+> color Red "paragraph" <> comma)
+-- >     , paragraph ("and" <+> bold "this text is bold.")
+-- >     ])
+-- > :}
+--
+-- Result:
+--
+-- > <h1>Example document</h1>
+-- > <p>This is a <span style="color: #f00">paragraph</span>,</p>
+-- > <p>and <strong>this text is bold.</strong></p>

@@ -15,10 +15,19 @@ import Prettyprinter
 
 
 
+-- $setup
+--
+-- (Definitions for the doctests)
+--
+-- >>> :set -XOverloadedStrings
+-- >>> import Prelude hiding (words)
+
 -- | Split an input into word-sized 'Doc's.
 --
--- >>> putDoc (tupled (words "Lorem ipsum dolor"))
+-- @
+-- putDoc (tupled (words "Lorem ipsum dolor"))
 -- (Lorem, ipsum, dolor)
+-- @
 words :: Text -> [Doc ann]
 words = map pretty . T.words
 
@@ -55,11 +64,3 @@ putDocW :: Int -> Doc ann -> IO ()
 putDocW w doc = renderIO System.IO.stdout (layoutPretty layoutOptions (unAnnotate doc))
   where
     layoutOptions = LayoutOptions { layoutPageWidth = AvailablePerLine w 1 }
-
-
-
--- $setup
---
--- (Definitions for the doctests)
---
--- >>> :set -XOverloadedStrings

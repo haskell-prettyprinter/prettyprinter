@@ -50,6 +50,7 @@ import Control.Applicative (liftA2)
 --
 -- (Definitions for the doctests)
 --
+-- >>> :set -XOverloadedStrings
 -- >>> import Prettyprinter hiding ((<>))
 -- >>> import qualified Data.Text.IO as T
 

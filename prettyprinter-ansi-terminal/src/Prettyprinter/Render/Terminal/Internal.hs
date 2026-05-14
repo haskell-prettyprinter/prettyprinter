@@ -63,6 +63,7 @@ import Data.Semigroup (Semigroup(..))
 -- >>> :set -XOverloadedStrings
 -- >>> import qualified Data.Text.Lazy.IO as TL
 -- >>> import qualified Data.Text.Lazy as TL
+-- >>> import Prettyprinter
 -- >>> import Prettyprinter.Render.Terminal
 
 
