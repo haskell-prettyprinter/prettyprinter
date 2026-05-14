@@ -26,7 +26,6 @@ jobs:
           , "prettyprinter-compat-ansi-wl-pprint/src"
           , "prettyprinter-compat-wl-pprint/src"
           , "prettyprinter-convert-ansi-wl-pprint/src"
-          , "prettyprinter-convert-ansi-wl-pprint/test"
           , "prettyprinter/app"
           , "prettyprinter/bench"
           , "prettyprinter/src"
