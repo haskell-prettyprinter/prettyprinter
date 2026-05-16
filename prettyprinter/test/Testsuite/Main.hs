@@ -16,6 +16,7 @@ import           Data.Word
 import           System.Timeout        (timeout)
 
 import           Prettyprinter
+import qualified Prettyprinter.Internal as Internal
 import           Prettyprinter.Internal.Debug
 import           Prettyprinter.Render.Text
 import           Prettyprinter.Render.Util.StackMachine (renderSimplyDecorated)
@@ -41,6 +42,7 @@ tests = testGroup "Tests"
                        (fusionDoesNotChangeRendering Deep)
         ]
     , testStripTrailingSpace
+    , testSpaces
     , testGroup "Performance tests"
         [ testCase "Grouping performance"
                    groupingPerformance
@@ -86,6 +88,24 @@ tests = testGroup "Tests"
         , testCase "Ribbon width should be computed with `floor` instead of `round` (#157)"
                    computeRibbonWidthWithFloor
         ]
+    ]
+
+testSpaces :: TestTree
+testSpaces = testGroup "Spaces"
+    [ testProperty "n >= 0 ==> length (show (spaces n)) == n"
+        (\(NonNegative n) -> length (show (Internal.spaces n)) == n)
+    , testCase "spaces 1 is a Char ' '"
+        (case Internal.spaces 1 of
+            Internal.Char ' ' -> pure ()
+            _ -> assertFailure "Expected Char ' '")
+    , testCase "spaces 0 is Empty"
+        (case Internal.spaces 0 of
+            Internal.Empty -> pure ()
+            _ -> assertFailure "Expected Empty")
+    , testProperty "negative spaces are Empty"
+        (\(Positive n) -> case Internal.spaces (-n) of
+            Internal.Empty -> True
+            _ -> False)
     ]
 
 fusionDoesNotChangeRendering :: FusionDepth -> Property

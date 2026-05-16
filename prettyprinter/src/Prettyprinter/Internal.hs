@@ -80,7 +80,7 @@ module Prettyprinter.Internal (
     renderShowS,
 
     -- * Internal helpers
-    textSpaces
+    spaces, textSpaces
 ) where
 
 
@@ -1385,19 +1385,6 @@ spaces n
   | n == 1    = Char ' '
   | otherwise = Text n (textSpaces n)
 
--- $
--- prop> \(NonNegative n) -> length (show (spaces n)) == n
---
--- >>> case spaces 1 of Char ' ' -> True; _ -> False
--- True
---
--- >>> case spaces 0 of Empty -> True; _ -> False
--- True
---
--- prop> \(Positive n) -> case (spaces (-n)) of Empty -> True; _ -> False
-
-
-
 -- | @('plural' n one many)@ is @one@ if @n@ is @1@, and @many@ otherwise. A
 -- typical use case is  adding a plural "s".
 --
@@ -2348,4 +2335,3 @@ textSpaces n = T.replicate n (T.singleton ' ')
 -- >>> import Prettyprinter.Render.Text
 -- >>> import Prettyprinter.Symbols.Ascii
 -- >>> import Prettyprinter.Util as Util
--- >>> import Test.QuickCheck.Modifiers
