@@ -8,9 +8,9 @@
 #
 # For more information, see https://github.com/haskell-CI/haskell-ci
 #
-# version: 0.19.20260104
+# version: 0.19.20260331
 #
-# REGENDATA ("0.19.20260104",["github","--config=cabal.haskell-ci","cabal.project"])
+# REGENDATA ("0.19.20260331",["github","--config=cabal.haskell-ci","cabal.project"])
 #
 name: Haskell-CI
 on:
@@ -23,6 +23,8 @@ on:
   merge_group:
     branches:
       - master
+  workflow_dispatch:
+    {}
 jobs:
   linux:
     name: Haskell-CI - Linux - ${{ matrix.compiler }}
@@ -310,6 +312,16 @@ jobs:
         run: |
           rm -f cabal.project.local
           $CABAL v2-build $ARG_COMPILER --disable-tests --disable-benchmarks all
+      - name: prepare for constraint sets
+        run: |
+          rm -f cabal.project.local
+      - name: constraint set prettyprinter-ansi-terminal-doctest
+        run: |
+          $CABAL v2-build $ARG_COMPILER --enable-tests --disable-benchmarks --constraint='prettyprinter-ansi-terminal +doctest' all --dry-run
+          cabal-plan topo | sort
+          $CABAL v2-build $ARG_COMPILER --enable-tests --disable-benchmarks --constraint='prettyprinter-ansi-terminal +doctest' --dependencies-only -j2 all
+          $CABAL v2-build $ARG_COMPILER --enable-tests --disable-benchmarks --constraint='prettyprinter-ansi-terminal +doctest' all
+          $CABAL v2-test $ARG_COMPILER --enable-tests --disable-benchmarks --constraint='prettyprinter-ansi-terminal +doctest' all
       - name: save cache
         if: always()
         uses: actions/cache/save@v5
