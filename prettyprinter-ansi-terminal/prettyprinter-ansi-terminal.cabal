@@ -29,6 +29,11 @@ flag text
   default:     True
   manual:      True
 
+flag doctest
+  description: Enable the doctest test suite.
+  default:     False
+  manual:      True
+
 library
     exposed-modules:  Data.Text.Prettyprint.Doc.Render.Terminal
                     , Data.Text.Prettyprint.Doc.Render.Terminal.Internal
@@ -59,6 +64,11 @@ library
             , Data.Text.Lazy.Builder
 
 test-suite doctest
+    -- This test suite requires several imports that doctest can't resolve
+    -- unless it is given access to a GHC package environment.
+    -- Therefore it is disabled by default, while still being checked in CI.
+    if !flag(doctest)
+        buildable: False
     type: exitcode-stdio-1.0
     hs-source-dirs: test/Doctest
     main-is: Main.hs

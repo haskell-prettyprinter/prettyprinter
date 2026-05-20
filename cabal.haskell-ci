@@ -5,3 +5,8 @@
 branches: master
 
 cabal-check: False
+
+constraint-set prettyprinter-ansi-terminal-doctest
+  constraints: prettyprinter-ansi-terminal +doctest
+  tests:       True
+  run-tests:   True
