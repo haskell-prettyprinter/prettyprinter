@@ -34,27 +34,9 @@ library
         , Prettyprinter.Render.Util.Panic
         , Prettyprinter.Render.Util.SimpleDocTree
         , Prettyprinter.Render.Util.StackMachine
-        , Prettyprinter.Util
-
         , Prettyprinter.Symbols.Unicode
         , Prettyprinter.Symbols.Ascii
-
-        , Data.Text.Prettyprint.Doc
-        , Data.Text.Prettyprint.Doc.Internal
-        , Data.Text.Prettyprint.Doc.Internal.Debug
-        , Data.Text.Prettyprint.Doc.Internal.Type
-        , Data.Text.Prettyprint.Doc.Render.String
-        , Data.Text.Prettyprint.Doc.Render.Text
-        , Data.Text.Prettyprint.Doc.Render.Tutorials.StackMachineTutorial
-        , Data.Text.Prettyprint.Doc.Render.Tutorials.TreeRenderingTutorial
-        , Data.Text.Prettyprint.Doc.Render.Util.Panic
-        , Data.Text.Prettyprint.Doc.Render.Util.SimpleDocTree
-        , Data.Text.Prettyprint.Doc.Render.Util.StackMachine
-        , Data.Text.Prettyprint.Doc.Util
-
-        , Data.Text.Prettyprint.Doc.Symbols.Unicode
-        , Data.Text.Prettyprint.Doc.Symbols.Ascii
-
+        , Prettyprinter.Util
     ghc-options: -Wall -O2 -Wcompat
     hs-source-dirs: src
     include-dirs: misc
