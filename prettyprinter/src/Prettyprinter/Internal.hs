@@ -2403,13 +2403,17 @@ renderShowS = go 0
     go !pending sds = case sds of
         SFail        -> panicUncaughtFail
         SEmpty       -> id
-        SChar c x    -> indentation . showChar c . go 0 x
-        SText _l t x -> indentation . showString (T.unpack t) . go 0 x
+        SChar c x    -> indentation (showChar c . go 0 x)
+        SText _l t x -> indentation (showString (T.unpack t) . go 0 x)
         SLine i x    -> showChar '\n' . go i x
-        SAnnPush _ x -> indentation . go 0 x
-        SAnnPop x    -> indentation . go 0 x
+        SAnnPush _ x -> indentation (go 0 x)
+        SAnnPop x    -> indentation (go 0 x)
       where
-        indentation = showString (replicate pending ' ')
+        -- The branch on pending must come first so that the common case,
+        -- pending == 0, is a single Int comparison.
+        indentation s = case pending of
+            0 -> s
+            n -> showString (replicate n ' ') . s
 
 
 -- | A utility for producing indentation etc.

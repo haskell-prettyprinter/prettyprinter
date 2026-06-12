@@ -146,23 +146,32 @@ renderLazy =
         -- The first argument is indentation that is only printed once the
         -- line turns out to be non-blank.
         -- See Note [Deferred indentation of blank lines] in Prettyprinter.Internal.
+        -- The pending == 0 case is split off in each branch, rather than
+        -- shared via a helper, to keep the hot path free of closure
+        -- allocation.
+        indentation pending = TLB.fromText (T.replicate pending " ")
+
         go :: Int -> [AnsiStyle] -> SimpleDocStream AnsiStyle -> TLB.Builder
         go !pending s sds = case sds of
             SFail -> panicUncaughtFail
             SEmpty -> mempty
-            SChar c rest -> indentation <> TLB.singleton c <> go 0 s rest
-            SText _ t rest -> indentation <> TLB.fromText t <> go 0 s rest
+            SChar c rest
+              | pending == 0 -> TLB.singleton c <> go 0 s rest
+              | otherwise -> indentation pending <> TLB.singleton c <> go 0 s rest
+            SText _ t rest
+              | pending == 0 -> TLB.fromText t <> go 0 s rest
+              | otherwise -> indentation pending <> TLB.fromText t <> go 0 s rest
             SLine i rest -> TLB.singleton '\n' <> go i s rest
             SAnnPush style rest ->
                 let currentStyle = unsafePeek s
                     newStyle = style <> currentStyle
-                in  indentation <> TLB.fromText (styleToRawText newStyle) <> go 0 (push newStyle s) rest
+                    styled = TLB.fromText (styleToRawText newStyle) <> go 0 (push newStyle s) rest
+                in  if pending == 0 then styled else indentation pending <> styled
             SAnnPop rest ->
                 let (_currentStyle, s') = unsafePop s
                     newStyle = unsafePeek s'
-                in  indentation <> TLB.fromText (styleToRawText newStyle) <> go 0 s' rest
-          where
-            indentation = TLB.fromText (T.replicate pending " ")
+                    styled = TLB.fromText (styleToRawText newStyle) <> go 0 s' rest
+                in  if pending == 0 then styled else indentation pending <> styled
 
     in  TLB.toLazyText . go 0 [mempty]
 

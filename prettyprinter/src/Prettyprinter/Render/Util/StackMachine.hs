@@ -78,18 +78,26 @@ renderSimplyDecorated text push pop = go 0 []
     -- The first argument is indentation that is only printed once the line
     -- turns out to be non-blank.
     -- See Note [Deferred indentation of blank lines] in Prettyprinter.Internal.
-    go !_      _           SFail               = panicUncaughtFail
-    go _       []          SEmpty              = mempty
-    go _       (_:_)       SEmpty              = panicInputNotFullyConsumed
-    go pending stack       (SChar c rest)      = indentation pending <> text (T.singleton c) <> go 0 stack rest
-    go pending stack       (SText _l t rest)   = indentation pending <> text t <> go 0 stack rest
-    go _       stack       (SLine i rest)      = text (T.singleton '\n') <> go i stack rest
-    go pending stack       (SAnnPush ann rest) = indentation pending <> push ann <> go 0 (ann : stack) rest
-    go pending (ann:stack) (SAnnPop rest)      = indentation pending <> pop ann <> go 0 stack rest
-    go _       []          SAnnPop{}           = panicUnpairedPop
-
-    indentation 0 = mempty
-    indentation n = text (textSpaces n)
+    -- The pending == 0 case is split off in each branch, rather than shared
+    -- via a helper, to keep the hot path free of closure allocation.
+    go !_      _     SFail             = panicUncaughtFail
+    go _       []    SEmpty            = mempty
+    go _       (_:_) SEmpty            = panicInputNotFullyConsumed
+    go pending stack (SChar c rest)
+      | pending == 0                   = text (T.singleton c) <> go 0 stack rest
+      | otherwise                      = text (textSpaces pending) <> text (T.singleton c) <> go 0 stack rest
+    go pending stack (SText _l t rest)
+      | pending == 0                   = text t <> go 0 stack rest
+      | otherwise                      = text (textSpaces pending) <> text t <> go 0 stack rest
+    go _       stack (SLine i rest)    = text (T.singleton '\n') <> go i stack rest
+    go pending stack (SAnnPush ann rest)
+      | pending == 0                   = push ann <> go 0 (ann : stack) rest
+      | otherwise                      = text (textSpaces pending) <> push ann <> go 0 (ann : stack) rest
+    go pending stack (SAnnPop rest)    = case stack of
+        ann:stack'
+          | pending == 0               -> pop ann <> go 0 stack' rest
+          | otherwise                  -> text (textSpaces pending) <> pop ann <> go 0 stack' rest
+        []                             -> panicUnpairedPop
 {-# INLINE renderSimplyDecorated #-}
 
 -- | Version of 'renderSimplyDecoratedA' that allows for 'Applicative' effects.
@@ -105,18 +113,26 @@ renderSimplyDecoratedA text push pop = go 0 []
     -- The first argument is indentation that is only printed once the line
     -- turns out to be non-blank.
     -- See Note [Deferred indentation of blank lines] in Prettyprinter.Internal.
-    go !_      _           SFail               = panicUncaughtFail
-    go _       []          SEmpty              = pure mempty
-    go _       (_:_)       SEmpty              = panicInputNotFullyConsumed
-    go pending stack       (SChar c rest)      = indentation pending <++> text (T.singleton c) <++> go 0 stack rest
-    go pending stack       (SText _l t rest)   = indentation pending <++> text t <++> go 0 stack rest
-    go _       stack       (SLine i rest)      = text (T.singleton '\n') <++> go i stack rest
-    go pending stack       (SAnnPush ann rest) = indentation pending <++> push ann <++> go 0 (ann : stack) rest
-    go pending (ann:stack) (SAnnPop rest)      = indentation pending <++> pop ann <++> go 0 stack rest
-    go _       []          SAnnPop{}           = panicUnpairedPop
-
-    indentation 0 = pure mempty
-    indentation n = text (textSpaces n)
+    -- The pending == 0 case is split off in each branch, rather than shared
+    -- via a helper, to keep the hot path free of closure allocation.
+    go !_      _     SFail             = panicUncaughtFail
+    go _       []    SEmpty            = pure mempty
+    go _       (_:_) SEmpty            = panicInputNotFullyConsumed
+    go pending stack (SChar c rest)
+      | pending == 0                   = text (T.singleton c) <++> go 0 stack rest
+      | otherwise                      = text (textSpaces pending) <++> text (T.singleton c) <++> go 0 stack rest
+    go pending stack (SText _l t rest)
+      | pending == 0                   = text t <++> go 0 stack rest
+      | otherwise                      = text (textSpaces pending) <++> text t <++> go 0 stack rest
+    go _       stack (SLine i rest)    = text (T.singleton '\n') <++> go i stack rest
+    go pending stack (SAnnPush ann rest)
+      | pending == 0                   = push ann <++> go 0 (ann : stack) rest
+      | otherwise                      = text (textSpaces pending) <++> push ann <++> go 0 (ann : stack) rest
+    go pending stack (SAnnPop rest)    = case stack of
+        ann:stack'
+          | pending == 0               -> pop ann <++> go 0 stack' rest
+          | otherwise                  -> text (textSpaces pending) <++> pop ann <++> go 0 stack' rest
+        []                             -> panicUnpairedPop
 
     (<++>) = liftA2 mappend
 {-# INLINE renderSimplyDecoratedA #-}

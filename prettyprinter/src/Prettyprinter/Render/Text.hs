@@ -54,16 +54,26 @@ renderLazy = TLB.toLazyText . go 0
     -- The first argument is indentation that is only printed once the line
     -- turns out to be non-blank.
     -- See Note [Deferred indentation of blank lines] in Prettyprinter.Internal.
+    -- The pending == 0 case is split off in each branch, rather than shared
+    -- via a helper, to keep the hot path free of closure allocation: any
+    -- shared formulation makes the Builder appends opaque to GHC and costs
+    -- 3-4x in benchmarks.
     go !pending x = case x of
         SFail              -> panicUncaughtFail
         SEmpty             -> mempty
-        SChar c rest       -> indentation <> TLB.singleton c <> go 0 rest
-        SText _l t rest    -> indentation <> TLB.fromText t <> go 0 rest
+        SChar c rest
+          | pending == 0   -> TLB.singleton c <> go 0 rest
+          | otherwise      -> TLB.fromText (textSpaces pending) <> TLB.singleton c <> go 0 rest
+        SText _l t rest
+          | pending == 0   -> TLB.fromText t <> go 0 rest
+          | otherwise      -> TLB.fromText (textSpaces pending) <> TLB.fromText t <> go 0 rest
         SLine i rest       -> TLB.singleton '\n' <> go i rest
-        SAnnPush _ann rest -> indentation <> go 0 rest
-        SAnnPop rest       -> indentation <> go 0 rest
-      where
-        indentation = TLB.fromText (textSpaces pending)
+        SAnnPush _ann rest
+          | pending == 0   -> go 0 rest
+          | otherwise      -> TLB.fromText (textSpaces pending) <> go 0 rest
+        SAnnPop rest
+          | pending == 0   -> go 0 rest
+          | otherwise      -> TLB.fromText (textSpaces pending) <> go 0 rest
 
 -- | @('renderStrict' sdoc)@ takes the output @sdoc@ from a rendering function
 -- and transforms it to strict text.
