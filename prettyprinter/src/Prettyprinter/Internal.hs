@@ -1091,7 +1091,7 @@ concatWith f ds
 -- lorem ipsum dolor sit amet
 --
 -- For automatic line breaks, consider using 'fillSep' instead.
-hsep :: [Doc ann] -> Doc ann
+hsep :: Foldable f => f (Doc ann) -> Doc ann
 hsep = concatWith (<+>)
 
 -- | @('vsep' xs)@ concatenates all documents @xs@ above each other. If a
@@ -1121,7 +1121,7 @@ hsep = concatWith (<+>)
 --
 -- Since 'group'ing a 'vsep' is rather common, 'sep' is a built-in for doing
 -- that.
-vsep :: [Doc ann] -> Doc ann
+vsep :: Foldable f => f (Doc ann) -> Doc ann
 vsep = concatWith (\x y -> x <> line <> y)
 
 -- | @('fillSep' xs)@ concatenates the documents @xs@ horizontally with @'<+>'@
@@ -1143,7 +1143,7 @@ vsep = concatWith (\x y -> x <> line <> y)
 -- Docs: lorem ipsum dolor sit amet lorem
 -- ipsum dolor sit amet lorem ipsum dolor
 -- sit amet lorem ipsum dolor sit amet
-fillSep :: [Doc ann] -> Doc ann
+fillSep :: Foldable f => f (Doc ann) -> Doc ann
 fillSep = concatWith (\x y -> x <> softline <> y)
 
 -- | @('sep' xs)@ tries laying out the documents @xs@ separated with 'space's,
@@ -1166,7 +1166,7 @@ fillSep = concatWith (\x y -> x <> softline <> y)
 -- @
 -- 'sep' = 'group' . 'vsep'
 -- @
-sep :: [Doc ann] -> Doc ann
+sep :: Foldable f => f (Doc ann) -> Doc ann
 sep = group . vsep
 
 
@@ -1179,7 +1179,7 @@ sep = group . vsep
 -- >>> let docs = Util.words "lorem ipsum dolor"
 -- >>> hcat docs
 -- loremipsumdolor
-hcat :: [Doc ann] -> Doc ann
+hcat :: Foldable f => f (Doc ann) -> Doc ann
 hcat = concatWith (<>)
 
 -- | @('vcat' xs)@ vertically concatenates the documents @xs@. If it is
@@ -1198,7 +1198,7 @@ hcat = concatWith (<>)
 --
 -- Since 'group'ing a 'vcat' is rather common, 'cat' is a built-in shortcut for
 -- it.
-vcat :: [Doc ann] -> Doc ann
+vcat :: Foldable f => f (Doc ann) -> Doc ann
 vcat = concatWith (\x y -> x <> line' <> y)
 
 -- | @('fillCat' xs)@ concatenates documents @xs@ horizontally with @'<>'@ as
@@ -1227,7 +1227,7 @@ vcat = concatWith (\x y -> x <> line' <> y)
 -- Grouped: loremipsumdolorsitametlorem
 -- ipsumdolorsitametloremipsumdolorsitamet
 -- loremipsumdolorsitamet
-fillCat :: [Doc ann] -> Doc ann
+fillCat :: Foldable f => f (Doc ann) -> Doc ann
 fillCat = concatWith (\x y -> x <> softline' <> y)
 
 -- | @('cat' xs)@ tries laying out the documents @xs@ separated with nothing,
@@ -1249,7 +1249,7 @@ fillCat = concatWith (\x y -> x <> softline' <> y)
 -- @
 -- 'cat' = 'group' . 'vcat'
 -- @
-cat :: [Doc ann] -> Doc ann
+cat :: Foldable f => f (Doc ann) -> Doc ann
 cat = group . vcat
 
 
