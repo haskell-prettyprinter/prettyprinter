@@ -73,17 +73,23 @@ renderSimplyDecorated
     -> (ann -> out)  -- ^ How to render the removed annotation
     -> SimpleDocStream ann
     -> out
-renderSimplyDecorated text push pop = go []
+renderSimplyDecorated text push pop = go 0 []
   where
-    go _           SFail               = panicUncaughtFail
-    go []          SEmpty              = mempty
-    go (_:_)       SEmpty              = panicInputNotFullyConsumed
-    go stack       (SChar c rest)      = text (T.singleton c) <> go stack rest
-    go stack       (SText _l t rest)   = text t <> go stack rest
-    go stack       (SLine i rest)      = text (T.singleton '\n') <> text (textSpaces i) <> go stack rest
-    go stack       (SAnnPush ann rest) = push ann <> go (ann : stack) rest
-    go (ann:stack) (SAnnPop rest)      = pop ann <> go stack rest
-    go []          SAnnPop{}           = panicUnpairedPop
+    -- The first argument is indentation that is only printed once the line
+    -- turns out to be non-blank.
+    -- See Note [Deferred indentation of blank lines] in Prettyprinter.Internal.
+    go !_      _           SFail               = panicUncaughtFail
+    go _       []          SEmpty              = mempty
+    go _       (_:_)       SEmpty              = panicInputNotFullyConsumed
+    go pending stack       (SChar c rest)      = indentation pending <> text (T.singleton c) <> go 0 stack rest
+    go pending stack       (SText _l t rest)   = indentation pending <> text t <> go 0 stack rest
+    go _       stack       (SLine i rest)      = text (T.singleton '\n') <> go i stack rest
+    go pending stack       (SAnnPush ann rest) = indentation pending <> push ann <> go 0 (ann : stack) rest
+    go pending (ann:stack) (SAnnPop rest)      = indentation pending <> pop ann <> go 0 stack rest
+    go _       []          SAnnPop{}           = panicUnpairedPop
+
+    indentation 0 = mempty
+    indentation n = text (textSpaces n)
 {-# INLINE renderSimplyDecorated #-}
 
 -- | Version of 'renderSimplyDecoratedA' that allows for 'Applicative' effects.
@@ -94,17 +100,23 @@ renderSimplyDecoratedA
     -> (ann -> f out)  -- ^ How to render the removed annotation
     -> SimpleDocStream ann
     -> f out
-renderSimplyDecoratedA text push pop = go []
+renderSimplyDecoratedA text push pop = go 0 []
   where
-    go _           SFail               = panicUncaughtFail
-    go []          SEmpty              = pure mempty
-    go (_:_)       SEmpty              = panicInputNotFullyConsumed
-    go stack       (SChar c rest)      = text (T.singleton c) <++> go stack rest
-    go stack       (SText _l t rest)   = text t <++> go stack rest
-    go stack       (SLine i rest)      = text (T.singleton '\n') <++> text (textSpaces i) <++> go stack rest
-    go stack       (SAnnPush ann rest) = push ann <++> go (ann : stack) rest
-    go (ann:stack) (SAnnPop rest)      = pop ann <++> go stack rest
-    go []          SAnnPop{}           = panicUnpairedPop
+    -- The first argument is indentation that is only printed once the line
+    -- turns out to be non-blank.
+    -- See Note [Deferred indentation of blank lines] in Prettyprinter.Internal.
+    go !_      _           SFail               = panicUncaughtFail
+    go _       []          SEmpty              = pure mempty
+    go _       (_:_)       SEmpty              = panicInputNotFullyConsumed
+    go pending stack       (SChar c rest)      = indentation pending <++> text (T.singleton c) <++> go 0 stack rest
+    go pending stack       (SText _l t rest)   = indentation pending <++> text t <++> go 0 stack rest
+    go _       stack       (SLine i rest)      = text (T.singleton '\n') <++> go i stack rest
+    go pending stack       (SAnnPush ann rest) = indentation pending <++> push ann <++> go 0 (ann : stack) rest
+    go pending (ann:stack) (SAnnPop rest)      = indentation pending <++> pop ann <++> go 0 stack rest
+    go _       []          SAnnPop{}           = panicUnpairedPop
+
+    indentation 0 = pure mempty
+    indentation n = text (textSpaces n)
 
     (<++>) = liftA2 mappend
 {-# INLINE renderSimplyDecoratedA #-}

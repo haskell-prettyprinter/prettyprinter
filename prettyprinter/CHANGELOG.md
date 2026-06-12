@@ -1,3 +1,15 @@
+# Unreleased
+
+- [Fix exponential running time of `layoutSmart` (#205)](https://github.com/quchen/prettyprinter/issues/205):
+  * The layout algorithms no longer remove the indentation of otherwise empty
+    lines from the `SimpleDocStream`. Instead, the renderers in this package
+    print the indentation of a line only when the line turns out to be
+    non-blank, so the rendered output is unchanged.
+  * Custom renderers that print the indentation of every `SLine`
+    unconditionally will produce trailing whitespace on blank lines again
+    (as before v1.7.0). The new function `dropIndentationOnEmptyLines`
+    restores the previous stream-level guarantee with one additional pass.
+
 # [1.7.2] – April 2026
 
 - [Add `PrettyAnn` type class](https://github.com/quchen/prettyprinter/pull/256)

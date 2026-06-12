@@ -48,6 +48,8 @@ tests = testGroup "Tests"
                    groupingPerformance
         , testCase "fillSep performance"
                    fillSepPerformance
+        , testCase "layoutSmart: fillSep of seps is not exponential (#205)"
+                   layoutSmartFillSepPerformance
         ]
     , testGroup "Regression tests"
         [ testCase "layoutSmart: softline behaves like a newline (#49)"
@@ -298,6 +300,20 @@ fillSepPerformance = docPerformanceTest (pathological 1000)
     pathological :: Int -> Doc ann
     pathological n = iterate (\x -> fillSep ["a", x <+> "b"] ) "foobar" !! n
 
+-- layoutSmart used to take time exponential in the length of the list
+-- passed to fillSep.
+--
+-- See https://github.com/quchen/prettyprinter/issues/205
+layoutSmartFillSepPerformance :: Assertion
+layoutSmartFillSepPerformance
+  = timeout 10000000 (evaluate (T.length rendered)) >>= \res -> case res of
+      Nothing -> assertFailure "Timeout!"
+      Just _success -> pure ()
+  where
+    rendered = renderStrict (layoutSmart defaultLayoutOptions doc)
+    doc :: Doc ()
+    doc = fillSep (replicate 100 (sep ["abc", "xyz"]))
+
 regressionLayoutSmartSoftline :: Assertion
 regressionLayoutSmartSoftline
   = let doc = "a" <> softline <> "b"
@@ -403,8 +419,16 @@ indentationShouldntCauseTrailingWhitespaceOnOtherwiseEmptyLines
   = let doc :: Doc ()
         doc = indent 1 ("x" <> hardline <> hardline <> "y" <> hardline)
         sdoc = layoutPretty (LayoutOptions Unbounded) doc
-        expected = SChar ' ' (SChar 'x' (SLine 0 (SLine 1 (SChar 'y' (SLine 0 SEmpty)))))
-    in assertEqual "" expected sdoc
+        expectedStream = SChar ' ' (SChar 'x' (SLine 0 (SLine 1 (SChar 'y' (SLine 0 SEmpty)))))
+    in do
+        -- The renderers drop the indentation of blank lines on the fly, ...
+        assertEqual "renderStrict" " x\n\n y\n" (renderStrict sdoc)
+        assertEqual "show" " x\n\n y\n" (T.pack (show doc))
+        -- ... and dropIndentationOnEmptyLines establishes the same guarantee
+        -- on the stream level.
+        assertEqual "dropIndentationOnEmptyLines"
+                    expectedStream
+                    (Internal.dropIndentationOnEmptyLines sdoc)
 
 computeRibbonWidthWithFloor :: Assertion
 computeRibbonWidthWithFloor

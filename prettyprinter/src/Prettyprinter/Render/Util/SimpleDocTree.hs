@@ -176,7 +176,10 @@ nextToken = UniqueParser (\sds -> case sds of
     SEmpty            -> empty
     SChar c rest      -> Just (TokChar c      , rest)
     SText l t rest    -> Just (TokText l t    , rest)
-    SLine i rest      -> Just (TokLine i      , rest)
+    -- Blank lines are not indented, so that rendering an 'STLine'
+    -- unconditionally does not produce trailing whitespace.
+    -- See Note [Deferred indentation of blank lines] in Prettyprinter.Internal.
+    SLine i rest      -> Just (TokLine (lineIndentation i rest), rest)
     SAnnPush ann rest -> Just (TokAnnPush ann , rest)
     SAnnPop rest      -> Just (TokAnnPop      , rest) )
 

@@ -75,12 +75,13 @@ module Prettyprinter.Internal (
     LayoutOptions(..), defaultLayoutOptions,
     layoutPretty, layoutCompact, layoutSmart,
     removeTrailingWhitespace,
+    dropIndentationOnEmptyLines,
 
     -- * Rendering
     renderShowS,
 
     -- * Internal helpers
-    spaces, textSpaces
+    spaces, textSpaces, lineIndentation
 ) where
 
 
@@ -1685,7 +1686,13 @@ data SimpleDocStream ann =
     -- | 'T.length' is /O(n)/, so we cache it in the 'Int' field.
     | SText !Int !Text (SimpleDocStream ann)
 
-    -- | @Int@ = indentation level for the (next) line
+    -- | @Int@ = indentation level for the (next) line.
+    --
+    -- Renderers should not print the indentation if the line is blank, i.e.
+    -- when the next element is 'SEmpty' or another 'SLine', since that would
+    -- produce trailing whitespace. Use 'dropIndentationOnEmptyLines' to
+    -- establish this on the stream level instead.
+    -- See Note [Deferred indentation of blank lines].
     | SLine !Int (SimpleDocStream ann)
 
     -- | Add an annotation to the remaining document.
@@ -1705,9 +1712,13 @@ data SimpleDocStream ann =
 -- whitespace, for example a renderer that colors the background of trailing
 -- whitespace, as e.g. @git diff@ can be configured to do.
 --
--- /Historical note:/ Since v1.7.0, 'layoutPretty' and 'layoutSmart' avoid
--- producing the trailing whitespace that was the original motivation for
--- creating 'removeTrailingWhitespace'.
+-- /Historical note:/ 'removeTrailingWhitespace' was originally created to
+-- remove the whitespace arising from indentation on otherwise empty lines.
+-- The renderers in this package no longer print such indentation in the
+-- first place (see Note [Deferred indentation of blank lines]), so this
+-- function is only needed for space characters that are part of the
+-- document itself. For custom renderers, 'dropIndentationOnEmptyLines' is a
+-- cheaper and less invasive alternative.
 -- See <https://github.com/quchen/prettyprinter/pull/139> for some background
 -- info.
 removeTrailingWhitespace :: SimpleDocStream ann -> SimpleDocStream ann
@@ -1790,6 +1801,41 @@ data WhitespaceStrippingState
 -- lorem
 -- <BLANKLINE>
 -- ipsum
+
+-- | Set the indentation of blank lines to zero, so that printing the
+-- indentation of every 'SLine' unconditionally does not produce trailing
+-- whitespace.
+--
+-- The renderers in this package already drop the indentation of blank lines
+-- on the fly, so they do not need this function. Use it to establish the
+-- same guarantee on the stream level, e.g. before feeding the stream to a
+-- custom renderer that prints the indentation of every 'SLine' as it is.
+-- See Note [Deferred indentation of blank lines].
+--
+-- Like 'removeTrailingWhitespace' this does an entire additional pass over
+-- the stream, but it is cheaper and more targeted: it only affects
+-- whitespace arising from indentation, never space characters that are part
+-- of the document.
+dropIndentationOnEmptyLines :: SimpleDocStream ann -> SimpleDocStream ann
+dropIndentationOnEmptyLines = go
+  where
+    go sds = case sds of
+        SFail          -> SFail
+        SEmpty         -> SEmpty
+        SChar c x      -> SChar c (go x)
+        SText l t x    -> SText l t (go x)
+        SLine i x      -> SLine (lineIndentation i x) (go x)
+        SAnnPush ann x -> SAnnPush ann (go x)
+        SAnnPop x      -> SAnnPop (go x)
+
+-- | The indentation to print for a line break, given the rest of the
+-- stream: blank lines are not indented.
+-- See Note [Deferred indentation of blank lines].
+lineIndentation :: Int -> SimpleDocStream ann -> Int
+lineIndentation i rest = case rest of
+    SEmpty  -> 0
+    SLine{} -> 0
+    _       -> i
 
 
 
@@ -2021,7 +2067,13 @@ layoutSmart (LayoutOptions pageWidth_@(AvailablePerLine lineLength ribbonFractio
         go w (SChar _ x)        = go (w - 1) x
         go w (SText l _t x)     = go (w - l) x
         go _ (SLine i x)
-          | minNestingLevel < i = go (lineLength - i) x -- TODO: Take ribbon width into account?! (#142)
+          | minNestingLevel < i = case x of
+              -- Blank lines are rendered without their indentation, so they
+              -- fit regardless of i.
+              -- See Note [Deferred indentation of blank lines].
+              SEmpty  -> True
+              SLine{} -> True
+              _       -> go (lineLength - i) x -- TODO: Take ribbon width into account?! (#142)
           | otherwise           = True
         go w (SAnnPush _ x)     = go w x
         go w (SAnnPop x)        = go w x
@@ -2093,15 +2145,9 @@ layoutWadlerLeijen
         Empty           -> best nl cc ds
         Char c          -> let !cc' = cc+1 in SChar c (best nl cc' ds)
         Text l t        -> let !cc' = cc+l in SText l t (best nl cc' ds)
-        Line            -> let x = best i i ds
-                               -- Don't produce indentation if there's no
-                               -- following text on the same line.
-                               -- This prevents trailing whitespace.
-                               i' = case x of
-                                   SEmpty  -> 0
-                                   SLine{} -> 0
-                                   _       -> i
-                           in SLine i' x
+        -- The full indentation is emitted even if the line turns out to be
+        -- blank. See Note [Deferred indentation of blank lines].
+        Line            -> SLine i (best i i ds)
         FlatAlt x _     -> best nl cc (Cons i x ds)
         Cat x y         -> best nl cc (Cons i x (Cons i y ds))
         Nest j x        -> let !ij = i+j in best nl cc (Cons ij x ds)
@@ -2132,6 +2178,10 @@ layoutWadlerLeijen
 
     initialIndentation :: SimpleDocStream ann -> Maybe Int
     initialIndentation sds = case sds of
+        -- The reported indentation is not corrected for blank lines:
+        -- that would peek one constructor further into an alternative
+        -- that may yet be discarded.
+        -- See Note [Deferred indentation of blank lines].
         SLine i _    -> Just i
         SAnnPush _ s -> initialIndentation s
         SAnnPop s    -> initialIndentation s
@@ -2248,6 +2298,47 @@ SimpleDocStream, trace how an SFail ends up there:
 So once a SimpleDocStream reaches selectNicer, any SFail in it must
 appear before the first linebreak – any other SFail would have been
 detected and rejected in a previous iteration.
+
+
+Note [Deferred indentation of blank lines]
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+A line break must not be followed by indentation if the rest of the line is
+blank, since that would be trailing whitespace (#139).
+
+The layout algorithm cannot apply this rule itself: whether a line is blank
+is a question about the part of the stream *after* the line break, and while
+alternatives are still being explored that part must not be forced. In
+particular, layoutSmart's fitting predicate walks across line breaks, so if
+constructing an SLine peeks at the stream behind it, measuring a candidate
+forces the candidates nested inside it, which compounds to exponential
+runtime (#205).
+
+So 'best' always records the full indentation in SLine, and the rule is
+implemented by the consumers of the stream, which run after all layout
+choices have been made:
+
+ * The renderers in this package print the indentation of an SLine only
+   once the line turns out to be non-blank: it is discarded when the next
+   element is SEmpty or another SLine. SAnnPush and SAnnPop count as
+   content, because an annotation may be about the whitespace itself, e.g.
+   in a renderer that colors the background of trailing whitespace (see
+   'removeTrailingWhitespace'). Streaming renderers implement this with a
+   "pending indentation" accumulator rather than by looking ahead;
+   'lineIndentation' implements the lookahead variant.
+
+ * layoutSmart's fitting predicate measures the indentation of blank lines
+   as zero, so that its fitting decisions agree with what the renderers
+   print. It may only inspect the element behind a line break in the branch
+   that recurses past it anyway.
+
+ * 'dropIndentationOnEmptyLines' establishes the rule on the stream level,
+   for custom renderers that print SLine indentation unconditionally.
+
+initialIndentation in layoutWadlerLeijen reports the indentation of a blank
+line uncorrected: correcting it would peek one element into a layout
+alternative that may yet be discarded, which is the same trap as above.
+minNestingLevel is a heuristic anyway, see
+Note [Choosing the right minNestingLevel for consistent smart layouts].
 -}
 
 
@@ -2303,14 +2394,22 @@ instance Show (Doc ann) where
 --     'showsPrec' _ = 'renderShowS' . 'layoutPretty' 'defaultLayoutOptions' . 'pretty'
 -- @
 renderShowS :: SimpleDocStream ann -> ShowS
-renderShowS = \sds -> case sds of
-    SFail        -> panicUncaughtFail
-    SEmpty       -> id
-    SChar c x    -> showChar c . renderShowS x
-    SText _l t x -> showString (T.unpack t) . renderShowS x
-    SLine i x    -> showString ('\n' : replicate i ' ') . renderShowS x
-    SAnnPush _ x -> renderShowS x
-    SAnnPop x    -> renderShowS x
+renderShowS = go 0
+  where
+    -- The first argument is indentation that is only printed once the line
+    -- turns out to be non-blank.
+    -- See Note [Deferred indentation of blank lines].
+    go :: Int -> SimpleDocStream ann -> ShowS
+    go !pending sds = case sds of
+        SFail        -> panicUncaughtFail
+        SEmpty       -> id
+        SChar c x    -> indentation . showChar c . go 0 x
+        SText _l t x -> indentation . showString (T.unpack t) . go 0 x
+        SLine i x    -> showChar '\n' . go i x
+        SAnnPush _ x -> indentation . go 0 x
+        SAnnPop x    -> indentation . go 0 x
+      where
+        indentation = showString (replicate pending ' ')
 
 
 -- | A utility for producing indentation etc.

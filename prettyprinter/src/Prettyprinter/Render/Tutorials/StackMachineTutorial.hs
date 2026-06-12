@@ -124,9 +124,13 @@ htmlTag = \sh -> case sh of
 -- the main API function of a stack machine renderer. The tree renderer
 -- equivalent to this is
 -- 'Prettyprinter.Render.Tutorials.TreeRenderingTutorial.render'.
+--
+-- Since 'renderStackMachine' prints the indentation of each 'SLine'
+-- unconditionally, we first run 'dropIndentationOnEmptyLines' over the
+-- stream so that blank lines do not get trailing whitespace.
 render :: SimpleDocStream SimpleHtml -> TL.Text
 render doc
-  = let (resultBuilder, remainingStyles) = execStackMachine [] (renderStackMachine doc)
+  = let (resultBuilder, remainingStyles) = execStackMachine [] (renderStackMachine (dropIndentationOnEmptyLines doc))
     in if null remainingStyles
         then TLB.toLazyText resultBuilder
         else error ("There are "

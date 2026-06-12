@@ -1,3 +1,4 @@
+{-# LANGUAGE BangPatterns      #-}
 {-# LANGUAGE CPP               #-}
 
 #include "version-compatibility-macros.h"
@@ -48,16 +49,21 @@ import Prettyprinter.Render.Util.Panic
 --       (foo bar)
 --       sit amet
 renderLazy :: SimpleDocStream ann -> TL.Text
-renderLazy = TLB.toLazyText . go
+renderLazy = TLB.toLazyText . go 0
   where
-    go x = case x of
+    -- The first argument is indentation that is only printed once the line
+    -- turns out to be non-blank.
+    -- See Note [Deferred indentation of blank lines] in Prettyprinter.Internal.
+    go !pending x = case x of
         SFail              -> panicUncaughtFail
         SEmpty             -> mempty
-        SChar c rest       -> TLB.singleton c <> go rest
-        SText _l t rest    -> TLB.fromText t <> go rest
-        SLine i rest       -> TLB.singleton '\n' <> (TLB.fromText (textSpaces i) <> go rest)
-        SAnnPush _ann rest -> go rest
-        SAnnPop rest       -> go rest
+        SChar c rest       -> indentation <> TLB.singleton c <> go 0 rest
+        SText _l t rest    -> indentation <> TLB.fromText t <> go 0 rest
+        SLine i rest       -> TLB.singleton '\n' <> go i rest
+        SAnnPush _ann rest -> indentation <> go 0 rest
+        SAnnPop rest       -> indentation <> go 0 rest
+      where
+        indentation = TLB.fromText (textSpaces pending)
 
 -- | @('renderStrict' sdoc)@ takes the output @sdoc@ from a rendering function
 -- and transforms it to strict text.
@@ -76,21 +82,31 @@ renderStrict = TL.toStrict . renderLazy
 -- since it writes to the handle directly, skipping the intermediate 'Text'
 -- representation.
 renderIO :: Handle -> SimpleDocStream ann -> IO ()
-renderIO h = go
+renderIO h = go 0
   where
-    go :: SimpleDocStream ann -> IO ()
-    go = \sds -> case sds of
+    -- The first argument is indentation that is only printed once the line
+    -- turns out to be non-blank.
+    -- See Note [Deferred indentation of blank lines] in Prettyprinter.Internal.
+    go :: Int -> SimpleDocStream ann -> IO ()
+    go !pending = \sds -> case sds of
         SFail              -> panicUncaughtFail
         SEmpty             -> pure ()
-        SChar c rest       -> do hPutChar h c
-                                 go rest
-        SText _ t rest     -> do T.hPutStr h t
-                                 go rest
+        SChar c rest       -> do indentation
+                                 hPutChar h c
+                                 go 0 rest
+        SText _ t rest     -> do indentation
+                                 T.hPutStr h t
+                                 go 0 rest
         SLine n rest       -> do hPutChar h '\n'
-                                 T.hPutStr h (textSpaces n)
-                                 go rest
-        SAnnPush _ann rest -> go rest
-        SAnnPop rest       -> go rest
+                                 go n rest
+        SAnnPush _ann rest -> do indentation
+                                 go 0 rest
+        SAnnPop rest       -> do indentation
+                                 go 0 rest
+      where
+        indentation = case pending of
+            0 -> pure ()
+            n -> T.hPutStr h (textSpaces n)
 
 -- | @('putDoc' doc)@ prettyprints document @doc@ to standard output. Uses the
 -- 'defaultLayoutOptions'.

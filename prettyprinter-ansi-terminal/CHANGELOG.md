@@ -1,3 +1,12 @@
+# Unreleased
+
+- `renderLazy`, `renderStrict` and `renderIO` print the indentation of a line
+  only when the line turns out to be non-blank, matching the renderers in
+  `prettyprinter`. This is part of the fix for the exponential running time
+  of `layoutSmart`
+  ([#205](https://github.com/quchen/prettyprinter/issues/205)); the rendered
+  output is unchanged.
+
 # [1.1.4] – April 2026
 
 - [Add `text` flag](https://github.com/quchen/prettyprinter/pull/279)

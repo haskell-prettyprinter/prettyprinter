@@ -292,6 +292,7 @@ module Prettyprinter (
     PageWidth(..), LayoutOptions(..), defaultLayoutOptions,
     layoutPretty, layoutCompact, layoutSmart,
     removeTrailingWhitespace,
+    dropIndentationOnEmptyLines,
 
     -- * Migration guide
     --

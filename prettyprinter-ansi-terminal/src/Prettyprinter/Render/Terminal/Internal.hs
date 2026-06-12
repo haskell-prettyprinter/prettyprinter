@@ -1,3 +1,4 @@
+{-# LANGUAGE BangPatterns      #-}
 {-# LANGUAGE CPP               #-}
 {-# LANGUAGE OverloadedStrings #-}
 
@@ -142,23 +143,28 @@ renderLazy =
         unsafePop []     = panicPoppedEmpty
         unsafePop (x:xs) = (x, xs)
 
-        go :: [AnsiStyle] -> SimpleDocStream AnsiStyle -> TLB.Builder
-        go s sds = case sds of
+        -- The first argument is indentation that is only printed once the
+        -- line turns out to be non-blank.
+        -- See Note [Deferred indentation of blank lines] in Prettyprinter.Internal.
+        go :: Int -> [AnsiStyle] -> SimpleDocStream AnsiStyle -> TLB.Builder
+        go !pending s sds = case sds of
             SFail -> panicUncaughtFail
             SEmpty -> mempty
-            SChar c rest -> TLB.singleton c <> go s rest
-            SText _ t rest -> TLB.fromText t <> go s rest
-            SLine i rest -> TLB.singleton '\n' <> TLB.fromText (T.replicate i " ") <> go s rest
+            SChar c rest -> indentation <> TLB.singleton c <> go 0 s rest
+            SText _ t rest -> indentation <> TLB.fromText t <> go 0 s rest
+            SLine i rest -> TLB.singleton '\n' <> go i s rest
             SAnnPush style rest ->
                 let currentStyle = unsafePeek s
                     newStyle = style <> currentStyle
-                in  TLB.fromText (styleToRawText newStyle) <> go (push newStyle s) rest
+                in  indentation <> TLB.fromText (styleToRawText newStyle) <> go 0 (push newStyle s) rest
             SAnnPop rest ->
                 let (_currentStyle, s') = unsafePop s
                     newStyle = unsafePeek s'
-                in  TLB.fromText (styleToRawText newStyle) <> go s' rest
+                in  indentation <> TLB.fromText (styleToRawText newStyle) <> go 0 s' rest
+          where
+            indentation = TLB.fromText (T.replicate pending " ")
 
-    in  TLB.toLazyText . go [mempty]
+    in  TLB.toLazyText . go 0 [mempty]
 
 
 -- | @('renderIO' h sdoc)@ writes @sdoc@ to the handle @h@.
@@ -193,31 +199,40 @@ renderIO h sdoc = do
             [] -> panicPoppedEmpty
             x:xs -> writeIORef styleStackRef xs >> pure x
 
-    let go = \sds -> case sds of
+    -- The first argument of go is indentation that is only printed once the
+    -- line turns out to be non-blank.
+    -- See Note [Deferred indentation of blank lines] in Prettyprinter.Internal.
+    let indentation pending = case pending of
+            0 -> pure ()
+            n -> T.hPutStr h (T.replicate n (T.singleton ' '))
+        go !pending = \sds -> case sds of
             SFail -> panicUncaughtFail
             SEmpty -> pure ()
             SChar c rest -> do
+                indentation pending
                 hPutChar h c
-                go rest
+                go 0 rest
             SText _ t rest -> do
+                indentation pending
                 T.hPutStr h t
-                go rest
+                go 0 rest
             SLine i rest -> do
                 hPutChar h '\n'
-                T.hPutStr h (T.replicate i (T.singleton ' '))
-                go rest
+                go i rest
             SAnnPush style rest -> do
+                indentation pending
                 currentStyle <- unsafePeek
                 let newStyle = style <> currentStyle
                 push newStyle
                 T.hPutStr h (styleToRawText newStyle)
-                go rest
+                go 0 rest
             SAnnPop rest -> do
+                indentation pending
                 _currentStyle <- unsafePop
                 newStyle <- unsafePeek
                 T.hPutStr h (styleToRawText newStyle)
-                go rest
-    go sdoc
+                go 0 rest
+    go 0 sdoc
     readIORef styleStackRef >>= \stack -> case stack of
         []  -> panicStyleStackFullyConsumed
         [_] -> pure ()
