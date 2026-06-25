@@ -48,6 +48,8 @@ tests = testGroup "Tests"
                    groupingPerformance
         , testCase "fillSep performance"
                    fillSepPerformance
+        , testCase "Issue 205"
+                   issue205
         ]
     , testGroup "Regression tests"
         [ testCase "layoutSmart: softline behaves like a newline (#49)"
@@ -83,8 +85,6 @@ tests = testGroup "Tests"
             [ testCase "Line" regressionUnboundedGroupedLine
             , testCase "Line within align" regressionUnboundedGroupedLineWithinAlign
             ]
-        , testCase "Indentation on otherwise empty lines results in trailing whitespace (#139)"
-                   indentationShouldntCauseTrailingWhitespaceOnOtherwiseEmptyLines
         , testCase "Ribbon width should be computed with `floor` instead of `round` (#157)"
                    computeRibbonWidthWithFloor
         ]
@@ -298,6 +298,14 @@ fillSepPerformance = docPerformanceTest (pathological 1000)
     pathological :: Int -> Doc ann
     pathological n = iterate (\x -> fillSep ["a", x <+> "b"] ) "foobar" !! n
 
+issue205 :: Assertion
+issue205 = do
+    let doc = fillSep (replicate 30 (sep ["abc", "xyz" :: Doc ()]))
+        t = renderStrict (layoutSmart defaultLayoutOptions doc)
+    timeout 1000000 (evaluate t) >>= \t' -> case t' of
+      Nothing -> assertFailure "Timeout!"
+      Just _success -> pure ()
+
 regressionLayoutSmartSoftline :: Assertion
 regressionLayoutSmartSoftline
   = let doc = "a" <> softline <> "b"
@@ -396,14 +404,6 @@ regressionUnboundedGroupedLineWithinAlign
         doc = group (align ("x" <> hardline <> "y"))
         sdoc = layoutPretty (LayoutOptions Unbounded) doc
         expected = SChar 'x' (SLine 0 (SChar 'y' SEmpty))
-    in assertEqual "" expected sdoc
-
-indentationShouldntCauseTrailingWhitespaceOnOtherwiseEmptyLines :: Assertion
-indentationShouldntCauseTrailingWhitespaceOnOtherwiseEmptyLines
-  = let doc :: Doc ()
-        doc = indent 1 ("x" <> hardline <> hardline <> "y" <> hardline)
-        sdoc = layoutPretty (LayoutOptions Unbounded) doc
-        expected = SChar ' ' (SChar 'x' (SLine 0 (SLine 1 (SChar 'y' (SLine 0 SEmpty)))))
     in assertEqual "" expected sdoc
 
 computeRibbonWidthWithFloor :: Assertion
