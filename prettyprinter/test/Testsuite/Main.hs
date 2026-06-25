@@ -48,6 +48,8 @@ tests = testGroup "Tests"
                    groupingPerformance
         , testCase "fillSep performance"
                    fillSepPerformance
+        , testCase "Issue 205"
+                   issue205
         ]
     , testGroup "Regression tests"
         [ testCase "layoutSmart: softline behaves like a newline (#49)"
@@ -297,6 +299,14 @@ fillSepPerformance = docPerformanceTest (pathological 1000)
   where
     pathological :: Int -> Doc ann
     pathological n = iterate (\x -> fillSep ["a", x <+> "b"] ) "foobar" !! n
+
+issue205 :: Assertion
+issue205 = do
+    let doc = fillSep (replicate 30 (sep ["abc", "xyz" :: Doc ()]))
+        t = renderStrict (layoutSmart defaultLayoutOptions doc)
+    timeout 1000000 (evaluate t) >>= \t' -> case t' of
+      Nothing -> assertFailure "Timeout!"
+      Just _success -> pure ()
 
 regressionLayoutSmartSoftline :: Assertion
 regressionLayoutSmartSoftline

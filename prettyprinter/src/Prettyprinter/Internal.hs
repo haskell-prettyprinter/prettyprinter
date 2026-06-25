@@ -1915,6 +1915,7 @@ layoutPretty
     -> SimpleDocStream ann
 layoutPretty (LayoutOptions pageWidth_@(AvailablePerLine lineLength ribbonFraction)) =
     layoutWadlerLeijen
+        smartLine
         (FittingPredicate
              (\lineIndent currentColumn _initialIndentY sdoc ->
                  fits
@@ -2002,7 +2003,8 @@ layoutSmart
     -> Doc ann
     -> SimpleDocStream ann
 layoutSmart (LayoutOptions pageWidth_@(AvailablePerLine lineLength ribbonFraction)) =
-    layoutWadlerLeijen (FittingPredicate fits) pageWidth_
+    dropIndentationOnEmptyLines .
+        layoutWadlerLeijen plainLine (FittingPredicate fits) pageWidth_
   where
     -- Why doesn't layoutSmart simply check the entire document?
     --
@@ -2021,7 +2023,14 @@ layoutSmart (LayoutOptions pageWidth_@(AvailablePerLine lineLength ribbonFractio
         go w (SChar _ x)        = go (w - 1) x
         go w (SText l _t x)     = go (w - l) x
         go _ (SLine i x)
-          | minNestingLevel < i = go (lineLength - i) x -- TODO: Take ribbon width into account?! (#142)
+          | minNestingLevel < i =
+              let i' = case x of
+                        SEmpty  -> 0
+                        SLine{} -> 0
+                        _       -> i
+              in if minNestingLevel < i'
+                    then go (lineLength - i') x -- TODO: Take ribbon width into account?! (#142)
+                    else True
           | otherwise           = True
         go w (SAnnPush _ x)     = go w x
         go w (SAnnPop x)        = go w x
@@ -2049,6 +2058,7 @@ layoutSmart (LayoutOptions Unbounded) = layoutUnbounded
 layoutUnbounded :: Doc ann -> SimpleDocStream ann
 layoutUnbounded =
     layoutWadlerLeijen
+        smartLine
         (FittingPredicate
             (\_lineIndent _currentColumn _initialIndentY sdoc -> not (failsOnFirstLine sdoc)))
         Unbounded
@@ -2066,13 +2076,45 @@ layoutUnbounded =
             SAnnPush _ s -> go s
             SAnnPop s    -> go s
 
+plainLine :: Int -> SimpleDocStream ann -> SimpleDocStream ann
+plainLine i x = SLine i x
+
+smartLine :: Int -> SimpleDocStream ann -> SimpleDocStream ann
+smartLine i x =
+    let i' = case x of
+            SEmpty  -> 0
+            SLine{} -> 0
+            _       -> i
+    in SLine i' x
+
+-- | Remove indentation that would otherwise survive on empty lines.
+dropIndentationOnEmptyLines :: SimpleDocStream ann -> SimpleDocStream ann
+dropIndentationOnEmptyLines = go
+  where
+    go sds = case sds of
+        SFail          -> SFail
+        SEmpty         -> SEmpty
+        SChar c x      -> SChar c (go x)
+        SText l t x    -> SText l t (go x)
+        SLine i x      ->
+            let x' = go x
+                i' = case x' of
+                    SEmpty  -> 0
+                    SLine{} -> 0
+                    _       -> i
+            in SLine i' x'
+        SAnnPush ann x -> SAnnPush ann (go x)
+        SAnnPop x      -> SAnnPop (go x)
+
 -- | The Wadler/Leijen layout algorithm
 layoutWadlerLeijen
-    :: forall ann. FittingPredicate ann
+    :: forall ann. (Int -> SimpleDocStream ann -> SimpleDocStream ann)
+    -> FittingPredicate ann
     -> PageWidth
     -> Doc ann
     -> SimpleDocStream ann
 layoutWadlerLeijen
+    mkLine
     (FittingPredicate fits)
     pageWidth_
     doc
@@ -2093,15 +2135,7 @@ layoutWadlerLeijen
         Empty           -> best nl cc ds
         Char c          -> let !cc' = cc+1 in SChar c (best nl cc' ds)
         Text l t        -> let !cc' = cc+l in SText l t (best nl cc' ds)
-        Line            -> let x = best i i ds
-                               -- Don't produce indentation if there's no
-                               -- following text on the same line.
-                               -- This prevents trailing whitespace.
-                               i' = case x of
-                                   SEmpty  -> 0
-                                   SLine{} -> 0
-                                   _       -> i
-                           in SLine i' x
+        Line            -> mkLine i (best i i ds)
         FlatAlt x _     -> best nl cc (Cons i x ds)
         Cat x y         -> best nl cc (Cons i x (Cons i y ds))
         Nest j x        -> let !ij = i+j in best nl cc (Cons ij x ds)
