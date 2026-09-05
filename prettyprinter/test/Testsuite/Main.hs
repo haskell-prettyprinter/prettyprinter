@@ -41,6 +41,14 @@ tests = testGroup "Tests"
         , testProperty "Deep fusion does not change rendering"
                        (fusionDoesNotChangeRendering Deep)
         ]
+    , testGroup "alterAnnotationsS"
+        [ testProperty "commutes with layout"
+                       alterAnnotationsSCommutesWithLayout
+        , testProperty "equals unAnnotateS"
+                       alterAnnotationsSEqualsUnAnnotateS
+        , testProperty "equals reAnnotateS"
+                       alterAnnotationsSEqualsReAnnotateS
+        ]
     , testStripTrailingSpace
     , testSpaces
     , testGroup "Performance tests"
@@ -126,6 +134,29 @@ fusionDoesNotChangeRendering depth
             , indent 4 (pretty rendered)
             , "Fused:"
             , indent 4 (pretty renderedFused) ]
+
+alterAnnotationsSCommutesWithLayout :: Property
+alterAnnotationsSCommutesWithLayout
+  = forAllShow (arbitrary :: Gen (Doc Int)) (show . diag) (\doc ->
+    forAll (arbitrary :: Gen (Layouter Int)) (\layouter ->
+    forAll (arbitrary :: Gen (Fun Int [Int])) (\(Fun _ f) ->
+        removeTrailingWhitespace (layout layouter (alterAnnotations f doc))
+        === removeTrailingWhitespace (alterAnnotationsS f (layout layouter doc)))))
+
+alterAnnotationsSEqualsUnAnnotateS :: Property
+alterAnnotationsSEqualsUnAnnotateS
+  = forAllShow (arbitrary :: Gen (Doc Int)) (show . diag) (\doc ->
+    forAll (arbitrary :: Gen (Layouter Int)) (\layouter ->
+        let sdoc = layout layouter doc
+        in (alterAnnotationsS (const []) sdoc :: SimpleDocStream Int) === unAnnotateS sdoc))
+
+alterAnnotationsSEqualsReAnnotateS :: Property
+alterAnnotationsSEqualsReAnnotateS
+  = forAllShow (arbitrary :: Gen (Doc Int)) (show . diag) (\doc ->
+    forAll (arbitrary :: Gen (Layouter Int)) (\layouter ->
+    forAll (arbitrary :: Gen (Fun Int Int)) (\(Fun _ f) ->
+        let sdoc = layout layouter doc
+        in alterAnnotationsS (pure . f) sdoc === reAnnotateS f sdoc)))
 
 instance Arbitrary ann => Arbitrary (Doc ann) where
     arbitrary = document
@@ -313,7 +344,7 @@ regressionAlterAnnotationsS :: Assertion
 regressionAlterAnnotationsS
   = let sdoc, sdoc' :: SimpleDocStream Int
         sdoc = layoutSmart defaultLayoutOptions (annotate 1 (annotate 2 (annotate 3 "a")))
-        sdoc' = alterAnnotationsS (\ann -> case ann of 2 -> Just 2; _ -> Nothing) sdoc
+        sdoc' = alterAnnotationsS (\ann -> case ann of 2 -> [2]; _ -> []) sdoc
     in assertEqual "" (SAnnPush 2 (SChar 'a' (SAnnPop SEmpty))) sdoc'
 
 doNotRemoveLeadingWhitespaceText :: Assertion

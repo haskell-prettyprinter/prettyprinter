@@ -224,10 +224,6 @@ reAnnotateST f = alterAnnotationsST (pure . f)
 
 -- | Change the annotation of a document to a different annotation, or none at
 -- all. 'alterAnnotations' for 'SimpleDocTree'.
---
--- Note that this is as powerful as 'alterAnnotations', allowing one annotation
--- to become multiple ones, contrary to 'alterAnnotationsS', which cannot do
--- this.
 alterAnnotationsST :: (ann -> [ann']) -> SimpleDocTree ann -> SimpleDocTree ann'
 alterAnnotationsST re = go
   where
