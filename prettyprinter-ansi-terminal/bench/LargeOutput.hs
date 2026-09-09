@@ -18,10 +18,12 @@ import           Data.Text                             (Text)
 import qualified Data.Text                             as T
 import qualified Data.Text.IO                          as T
 import qualified Data.Text.Lazy                        as TL
+import qualified Data.Text.Lazy.IO                     as TL
 import           GHC.Generics
 import           Prettyprinter
 import           Prettyprinter.Render.Terminal         as Terminal
 import qualified Prettyprinter.Render.Text             as Text
+import           System.IO
 import           Test.QuickCheck
 import           Test.QuickCheck.Gen
 import           Test.QuickCheck.Random
@@ -150,9 +152,21 @@ main = do
     let render :: (SimpleDocStream AnsiStyle -> TL.Text) -> Program -> TL.Text
         render r = r . layoutPretty layoutOpts . prettyProgram
 
+    let sdoc = layoutPretty layoutOpts (prettyProgram prog)
+    devNull <- openFile "/dev/null" WriteMode
+    hSetBuffering devNull (BlockBuffering Nothing)
+
     rnf prog `seq` T.putStrLn "Starting benchmark…"
 
     defaultMain
-        [ bench "prettyprinter-ansi-terminal" (nf (render Terminal.renderLazy) prog)
-        , bench "prettyprinter" (nf (render Text.renderLazy) prog)
+        [ bgroup "renderLazy"
+            [ bench "prettyprinter-ansi-terminal" (nf (render Terminal.renderLazy) prog)
+            , bench "prettyprinter" (nf (render Text.renderLazy) prog)
+            ]
+        , bgroup "Rendering to a handle (/dev/null)"
+            [ bench "Terminal.renderIO"                   (whnfIO (Terminal.renderIO devNull sdoc))
+            , bench "hPutStr . Terminal.renderLazy"       (whnfIO (TL.hPutStr devNull (Terminal.renderLazy sdoc)))
+            , bench "Text.renderIO"                       (whnfIO (Text.renderIO devNull sdoc))
+            , bench "hPutStr . Text.renderLazy"           (whnfIO (TL.hPutStr devNull (Text.renderLazy sdoc)))
+            ]
         ]

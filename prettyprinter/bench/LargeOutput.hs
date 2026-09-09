@@ -17,9 +17,11 @@ import           Data.Text                             (Text)
 import qualified Data.Text                             as T
 import qualified Data.Text.IO                          as T
 import qualified Data.Text.Lazy                        as TL
+import qualified Data.Text.Lazy.IO                     as TL
 import           Prettyprinter
 import           Prettyprinter.Render.Text
 import           GHC.Generics
+import           System.IO
 import           Test.QuickCheck
 import           Test.QuickCheck.Gen
 import           Test.QuickCheck.Random
@@ -189,10 +191,19 @@ main = do
     let _80ColumnsLayoutOptions = defaultLayoutOptions { layoutPageWidth = AvailablePerLine 80 0.5 }
         unboundedLayoutOptions  = defaultLayoutOptions { layoutPageWidth = Unbounded }
 
+    let sdoc = layoutPretty unboundedLayoutOptions (pretty prog)
+    devNull <- openFile "/dev/null" WriteMode
+    hSetBuffering devNull (BlockBuffering Nothing)
+
     rnf prog `seq` T.putStrLn "Starting benchmark…"
 
     defaultMain
-        [ bgroup "80 characters, 50% ribbon"
+        [ bgroup "Rendering to a handle (/dev/null)"
+            [ bench "renderIO"               (whnfIO (renderIO devNull sdoc))
+            , bench "hPutStr . renderLazy"   (whnfIO (TL.hPutStr devNull (renderLazy sdoc)))
+            , bench "hPutStr . renderStrict" (whnfIO (T.hPutStr devNull (renderStrict sdoc)))
+            ]
+        , bgroup "80 characters, 50% ribbon"
             [ bgroup "prettyprinter"
                 [ bench "layoutPretty"  (nf (renderWith (layoutPretty _80ColumnsLayoutOptions)) prog)
                 , bench "layoutSmart"   (nf (renderWith (layoutSmart  _80ColumnsLayoutOptions)) prog)
