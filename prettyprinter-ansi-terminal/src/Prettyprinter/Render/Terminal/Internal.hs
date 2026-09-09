@@ -132,32 +132,28 @@ underlined = mempty { ansiUnderlining = Just Underlined }
 --
 -- Run the above via @echo -e '...'@ in your terminal to see the coloring.
 renderLazy :: SimpleDocStream AnsiStyle -> TL.Text
-renderLazy =
-    let push x = (x :)
-
-        unsafePeek []    = panicPeekedEmpty
-        unsafePeek (x:_) = x
-
-        unsafePop []     = panicPoppedEmpty
-        unsafePop (x:xs) = (x, xs)
-
-        go :: [AnsiStyle] -> SimpleDocStream AnsiStyle -> TLB.Builder
-        go s sds = case sds of
-            SFail -> panicUncaughtFail
-            SEmpty -> mempty
-            SChar c rest -> TLB.singleton c <> go s rest
-            SText _ t rest -> TLB.fromText t <> go s rest
-            SLine i rest -> TLB.singleton '\n' <> TLB.fromText (T.replicate i " ") <> go s rest
-            SAnnPush style rest ->
-                let currentStyle = unsafePeek s
-                    newStyle = style <> currentStyle
-                in  TLB.fromText (styleToRawText newStyle) <> go (push newStyle s) rest
-            SAnnPop rest ->
-                let (_currentStyle, s') = unsafePop s
-                    newStyle = unsafePeek s'
-                in  TLB.fromText (styleToRawText newStyle) <> go s' rest
-
-    in  TLB.toLazyText . go [mempty]
+renderLazy = TLB.toLazyText . go [(mempty, styleToRawText mempty)]
+  where
+    -- Each stack entry pairs a style with its SGR sequence, so that popping
+    -- back to a style does not recompute the sequence.
+    go :: [(AnsiStyle, Text)] -> SimpleDocStream AnsiStyle -> TLB.Builder
+    go s sds = case sds of
+        SFail -> panicUncaughtFail
+        SEmpty -> mempty
+        SChar c rest -> TLB.singleton c <> go s rest
+        SText _ t rest -> TLB.fromText t <> go s rest
+        SLine i rest -> TLB.singleton '\n' <> TLB.fromText (T.replicate i " ") <> go s rest
+        SAnnPush style rest -> case s of
+            [] -> panicPeekedEmpty
+            (currentStyle, _) : _ ->
+                let newStyle = style <> currentStyle
+                    sgr = styleToRawText newStyle
+                in  TLB.fromText sgr <> go ((newStyle, sgr) : s) rest
+        SAnnPop rest -> case s of
+            [] -> panicPoppedEmpty
+            _ : s' -> case s' of
+                [] -> panicPeekedEmpty
+                (_, sgr) : _ -> TLB.fromText sgr <> go s' rest
 
 
 -- | @('renderIO' h sdoc)@ writes @sdoc@ to the handle @h@.
