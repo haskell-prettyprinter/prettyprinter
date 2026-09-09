@@ -19,9 +19,9 @@ module Prettyprinter.Render.Text (
 
 
 import           Data.Text              (Text)
-import qualified Data.Text.IO           as T
 import qualified Data.Text.Lazy         as TL
 import qualified Data.Text.Lazy.Builder as TLB
+import qualified Data.Text.Lazy.IO      as TL
 import           System.IO
 
 import Prettyprinter
@@ -72,25 +72,14 @@ renderStrict = TL.toStrict . renderLazy
 -- hello
 -- world
 --
--- This function is more efficient than @'T.hPutStr' h ('renderStrict' sdoc)@,
--- since it writes to the handle directly, skipping the intermediate 'Text'
--- representation.
+-- The output is written in chunks as it is produced, so the whole document is
+-- never held in memory at once:
+--
+-- @
+-- 'renderIO' h sdoc = 'TL.hPutStr' h ('renderLazy' sdoc)
+-- @
 renderIO :: Handle -> SimpleDocStream ann -> IO ()
-renderIO h = go
-  where
-    go :: SimpleDocStream ann -> IO ()
-    go = \sds -> case sds of
-        SFail              -> panicUncaughtFail
-        SEmpty             -> pure ()
-        SChar c rest       -> do hPutChar h c
-                                 go rest
-        SText _ t rest     -> do T.hPutStr h t
-                                 go rest
-        SLine n rest       -> do hPutChar h '\n'
-                                 T.hPutStr h (textSpaces n)
-                                 go rest
-        SAnnPush _ann rest -> go rest
-        SAnnPop rest       -> go rest
+renderIO h sdoc = TL.hPutStr h (renderLazy sdoc)
 
 -- | @('putDoc' doc)@ prettyprints document @doc@ to standard output. Uses the
 -- 'defaultLayoutOptions'.
