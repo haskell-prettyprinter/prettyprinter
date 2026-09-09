@@ -39,6 +39,7 @@ module Prettyprinter.Render.Terminal.Internal (
 
 
 import           Control.Applicative
+import           Data.Array             (Array, listArray, (!))
 import           Data.Maybe
 import           Data.Text              (Text)
 import qualified Data.Text              as T
@@ -231,8 +232,58 @@ instance Monoid AnsiStyle where
     mempty = SetAnsiStyle Nothing Nothing Nothing Nothing Nothing
     mappend = (<>)
 
+-- | The SGR sequence that switches the terminal to the given style.
+--
+-- Looked up in a lazily filled table covering all styles, since building the
+-- sequence from scratch on every annotation costs more than the rendering
+-- around it.
 styleToRawText :: AnsiStyle -> Text
-styleToRawText = T.pack . ANSI.setSGRCode . stylesToSgrs
+styleToRawText style = sgrTable ! styleIndex style
+
+sgrTable :: Array Int Text
+sgrTable = listArray (0, length allStyles - 1) (map buildSgr allStyles)
+  where
+    allStyles =
+        [ SetAnsiStyle fg bg b i u
+        | u <- [Nothing, Just Underlined]
+        , i <- [Nothing, Just Italicized]
+        , b <- [Nothing, Just Bold]
+        , bg <- allColors
+        , fg <- allColors ]
+
+-- | Position of a style in 'sgrTable'. Must enumerate styles in the same order
+-- as 'sgrTable' does.
+styleIndex :: AnsiStyle -> Int
+styleIndex (SetAnsiStyle fg bg b i u) =
+    colorIndex fg + numColors * (colorIndex bg + numColors * (flag b + 2 * (flag i + 2 * flag u)))
+  where
+    flag = maybe 0 (const 1)
+
+allColors :: [Maybe (Intensity, Color)]
+allColors = Nothing : [ Just (intensity, c) | intensity <- [Vivid, Dull], c <- [Black, Red, Green, Yellow, Blue, Magenta, Cyan, White] ]
+
+numColors :: Int
+numColors = length allColors
+
+colorIndex :: Maybe (Intensity, Color) -> Int
+colorIndex Nothing = 0
+colorIndex (Just (intensity, c)) = 1 + 8 * intensityIndex intensity + colorOffset c
+  where
+    intensityIndex Vivid = 0
+    intensityIndex Dull  = 1
+
+    colorOffset c' = case c' of
+        Black   -> 0
+        Red     -> 1
+        Green   -> 2
+        Yellow  -> 3
+        Blue    -> 4
+        Magenta -> 5
+        Cyan    -> 6
+        White   -> 7
+
+buildSgr :: AnsiStyle -> Text
+buildSgr = T.pack . ANSI.setSGRCode . stylesToSgrs
   where
     stylesToSgrs :: AnsiStyle -> [ANSI.SGR]
     stylesToSgrs (SetAnsiStyle fg bg b i u) = catMaybes
