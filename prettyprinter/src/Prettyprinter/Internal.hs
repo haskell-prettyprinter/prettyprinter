@@ -88,7 +88,6 @@ module Prettyprinter.Internal (
 import           Control.Applicative
 import           Data.Int
 import           Data.List.NonEmpty  (NonEmpty (..))
-import qualified Data.List           as List
 import           Data.Maybe
 import           Data.String         (IsString (..))
 import           Data.Text           (Text)
@@ -1551,22 +1550,25 @@ reAnnotateS re = go
 -- | Change the annotations of a 'SimpleDocStream'. Individual annotations can be
 -- removed, changed, or replaced by multiple ones. 'alterAnnotations' for 'SimpleDocStream'.
 alterAnnotationsS :: (ann -> [ann']) -> SimpleDocStream ann -> SimpleDocStream ann'
-alterAnnotationsS re = go []
+alterAnnotationsS re = go NoPendingPops
   where
-    -- We keep a stack of how many pushes to pop corresponding to the last push.
     go stack = \sds -> case sds of
         SFail             -> SFail
         SEmpty            -> SEmpty
         SChar c rest      -> SChar c (go stack rest)
         SText l t rest    -> SText l t (go stack rest)
         SLine l rest      -> SLine l (go stack rest)
-        SAnnPush ann rest -> let ann' = re ann
-                                 n = List.length ann'
-                                 rest' = go (n : stack) rest
-                             in foldr SAnnPush rest' ann'
+        SAnnPush ann rest -> pushAll 0 (re ann)
+          where
+            pushAll !n []       = go (PendingPops n stack) rest
+            pushAll !n (a : as) = SAnnPush a (pushAll (n + 1) as)
         SAnnPop rest      -> case stack of
-            []       -> panicPeekedEmpty
-            n:stack' -> foldr ($) (go stack' rest) (replicate n SAnnPop)
+            NoPendingPops        -> panicPeekedEmpty
+            PendingPops n stack' -> foldr ($) (go stack' rest) (replicate n SAnnPop)
+
+-- | Stack used by 'alterAnnotationsS': for each open input annotation, the number
+-- of 'SAnnPop's to emit when it closes.
+data PendingPops = NoPendingPops | PendingPops !Int !PendingPops
 
 -- | Fusion depth parameter, used by 'fuse'.
 data FusionDepth =
